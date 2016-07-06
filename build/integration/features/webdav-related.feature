@@ -2,12 +2,95 @@ Feature: webdav-related
 	Background:
 		Given using api version "1"
 
-	Scenario: moving a file old way
+	Scenario: Moving a file
 		Given using dav path "remote.php/webdav"
 		And As an "admin"
 		And user "user0" exists
 		When User "user0" moves file "/textfile0.txt" to "/FOLDER/textfile0.txt"
 		Then the HTTP status code should be "201"
+
+	Scenario: Moving and overwriting a file old way
+		Given using dav path "remote.php/webdav"
+		And As an "admin"
+		And user "user0" exists
+		When User "user0" moves file "/textfile0.txt" to "/textfile1.txt"
+		Then the HTTP status code should be "204"
+
+	Scenario: Moving a file to a folder with no permissions
+		Given using dav path "remote.php/webdav"
+		And As an "admin"
+		And user "user0" exists
+		And user "user1" exists
+		And As an "user1"
+		And user "user1" created a folder "/testshare"
+		And as "user1" creating a share with
+		  | path | testshare |
+		  | shareType | 0 |
+		  | permissions | 1 |
+		  | shareWith | user0 |
+		When User "user0" moves file "/textfile0.txt" to "/testshare/textfile0.txt"
+		Then the HTTP status code should be "403"
+
+	Scenario: Moving a file to overwrite a file in a folder with no permissions
+		Given using dav path "remote.php/webdav"
+		And As an "admin"
+		And user "user0" exists
+		And user "user1" exists
+		And As an "user1"
+		And user "user1" created a folder "/testshare"
+		And as "user1" creating a share with
+		  | path | testshare |
+		  | shareType | 0 |
+		  | permissions | 1 |
+		  | shareWith | user0 |
+		And "user1" copies file "/textfile0.txt" to "/testshare/overwritethis.txt"
+		When User "user0" moves file "/textfile0.txt" to "/testshare/overwritethis.txt"
+		Then the HTTP status code should be "403"
+
+	Scenario: Copying a file
+		Given using dav path "remote.php/webdav"
+		And As an "admin"
+		And user "user0" exists
+		When User "user0" copies file "/textfile0.txt" to "/FOLDER/textfile0.txt"
+		Then the HTTP status code should be "201"
+
+	Scenario: Copying and overwriting a file
+		Given using dav path "remote.php/webdav"
+		And As an "admin"
+		And user "user0" exists
+		When User "user0" copies file "/textfile0.txt" to "/textfile1.txt"
+		Then the HTTP status code should be "204"
+
+	Scenario: Copying a file to a folder with no permissions
+		Given using dav path "remote.php/webdav"
+		And As an "admin"
+		And user "user0" exists
+		And user "user1" exists
+		And As an "user1"
+		And user "user1" created a folder "/testshare"
+		And as "user1" creating a share with
+		  | path | testshare |
+		  | shareType | 0 |
+		  | permissions | 1 |
+		  | shareWith | user0 |
+		When User "user0" copies file "/textfile0.txt" to "/testshare/textfile0.txt"
+		Then the HTTP status code should be "403"
+
+	Scenario: Copying a file to overwrite a file into a folder with no permissions
+		Given using dav path "remote.php/webdav"
+		And As an "admin"
+		And user "user0" exists
+		And user "user1" exists
+		And As an "user1"
+		And user "user1" created a folder "/testshare"
+		And as "user1" creating a share with
+		  | path | testshare |
+		  | shareType | 0 |
+		  | permissions | 1 |
+		  | shareWith | user0 |
+		And user "user1" copies file "/textfile0.txt" to "/testshare/overwritethis.txt"
+		When User "user0" copies file "/textfile0.txt" to "/testshare/overwritethis.txt"
+		Then the HTTP status code should be "403"
 
 	Scenario: download a file with range
 		Given using dav path "remote.php/webdav"
