@@ -38,8 +38,8 @@ SHELL=/bin/bash
 # Define YARN and check if it is available on the system.
 #
 YARN := $(shell command -v yarn 2> /dev/null)
-KARMA=$(NODE_PREFIX)/node_modules/.bin/karma
-JSDOC=$(NODE_PREFIX)/node_modules/.bin/jsdoc
+KARMA=$(HOME)/.yarn/bin/karma
+JSDOC=$(HOME)/.yarn/bin/jsdoc
 PHPUNIT="$(shell pwd)/lib/composer/phpunit/phpunit/phpunit"
 COMPOSER_BIN := $(shell command -v composer 2> /dev/null)
 
