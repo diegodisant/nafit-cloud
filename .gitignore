@@ -151,3 +151,6 @@ clover.xml
 
 # SonarCloud scanner
 .scannerwork
+
+.env
+docker-compose.yml
