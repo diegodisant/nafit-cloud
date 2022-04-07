@@ -39,7 +39,6 @@ use TestHelpers\Asserts\WebDav as WebDavAssert;
  * WebDav functions
  */
 trait WebDav {
-
 	/**
 	 * @var string
 	 */
@@ -283,10 +282,20 @@ trait WebDav {
 	 * @param string $user
 	 *
 	 * @return string
+	 * @throws GuzzleException
 	 */
 	public function getFullDavFilesPath(string $user):string {
+		$spaceId = null;
+		if ($this->getDavPathVersion() === WebDavHelper::DAV_VERSION_SPACES) {
+			$spaceId = WebDavHelper::getPersonalSpaceIdForUser(
+				$this->getBaseUrl(),
+				$user,
+				$this->getPasswordForUser($user),
+				$this->getStepLineRef()
+			);
+		}
 		$path = $this->getBasePath() . "/" .
-			WebDavHelper::getDavPath($user, $this->getDavPathVersion());
+			WebDavHelper::getDavPath($user, $this->getDavPathVersion(), "files", $spaceId);
 		$path = WebDavHelper::sanitizeUrl($path);
 		return \ltrim($path, "/");
 	}
@@ -316,20 +325,20 @@ trait WebDav {
 	 */
 	public function getDavPathVersion(?string $for = null):?int {
 		if ($this->usingSpacesDavPath) {
-			return 3;
+			return WebDavHelper::DAV_VERSION_SPACES;
 		}
 		if ($for === 'systemtags') {
 			// systemtags only exists since DAV v2
-			return 2;
+			return WebDavHelper::DAV_VERSION_NEW;
 		}
 		if ($for === 'file_versions') {
 			// file_versions only exists since DAV v2
-			return 2;
+			return WebDavHelper::DAV_VERSION_NEW;
 		}
 		if ($this->usingOldDavPath === true) {
-			return 1;
+			return WebDavHelper::DAV_VERSION_OLD;
 		} else {
-			return 2;
+			return WebDavHelper::DAV_VERSION_NEW;
 		}
 	}
 
@@ -344,11 +353,16 @@ trait WebDav {
 	 * @return string DAV path selected, or appropriate for the endpoint
 	 */
 	public function getDavPath(?string $for = null):string {
-		if ($this->getDavPathVersion($for) === 1) {
+		$davPathVersion = $this->getDavPathVersion($for);
+		if ($davPathVersion === WebDavHelper::DAV_VERSION_OLD) {
 			return $this->getOldDavPath();
 		}
 
-		return $this->getNewDavPath();
+		if ($davPathVersion === WebDavHelper::DAV_VERSION_NEW) {
+			return $this->getNewDavPath();
+		}
+
+		return $this->getSpacesDavPath();
 	}
 
 	/**
@@ -593,10 +607,12 @@ trait WebDav {
 	 * @param string $fileDestination
 	 *
 	 * @return string
+	 * @throws GuzzleException
 	 */
 	public function destinationHeaderValue(string $user, string $fileDestination):string {
+		$spaceId = $this->getPersonalSpaceIdForUser($user);
 		$fullUrl = $this->getBaseUrl() . '/' .
-			WebDavHelper::getDavPath($user, $this->getDavPathVersion());
+			WebDavHelper::getDavPath($user, $this->getDavPathVersion(), "files", $spaceId);
 		return \rtrim($fullUrl, '/') . '/' . \ltrim($fileDestination, '/');
 	}
 
@@ -830,6 +846,7 @@ trait WebDav {
 		$this->asFileOrFolderShouldExist($user, $entry, $source);
 		$this->userMovesFileUsingTheAPI($user, $source, "", $destination);
 		$this->asFileOrFolderShouldExist($user, $entry, $source);
+		$this->asFileOrFolderShouldNotExist($user, $entry, $destination);
 	}
 
 	/**
@@ -902,6 +919,7 @@ trait WebDav {
 			["201", "204"],
 			"HTTP status code was not 201 or 204 while trying to copy file '$fileSource' to '$fileDestination' for user '$user'"
 		);
+		$this->emptyLastHTTPStatusCodesArray();
 	}
 
 	/**
@@ -984,6 +1002,37 @@ trait WebDav {
 	):void {
 		$user = $this->getActualUsername($user);
 		$password = $this->getActualPassword($password);
+		$this->downloadFileAsUserUsingPassword($user, $fileName, $password);
+		Assert::assertGreaterThanOrEqual(
+			400,
+			$this->getResponse()->getStatusCode(),
+			__METHOD__
+			. ' download must fail'
+		);
+		Assert::assertLessThanOrEqual(
+			499,
+			$this->getResponse()->getStatusCode(),
+			__METHOD__
+			. ' 4xx error expected but got status code "'
+			. $this->getResponse()->getStatusCode() . '"'
+		);
+	}
+
+	/**
+	 * @Then /^user "([^"]*)" should not be able to download file "([^"]*)"$/
+	 *
+	 * @param string $user
+	 * @param string $fileName
+	 *
+	 * @return void
+	 * @throws JsonException
+	 */
+	public function userShouldNotBeAbleToDownloadFile(
+		string $user,
+		string $fileName
+	):void {
+		$user = $this->getActualUsername($user);
+		$password = $this->getPasswordForUser($user);
 		$this->downloadFileAsUserUsingPassword($user, $fileName, $password);
 		Assert::assertGreaterThanOrEqual(
 			400,
@@ -1506,7 +1555,10 @@ trait WebDav {
 			$password,
 			$resource,
 			[],
-			$this->getStepLineRef()
+			$this->getStepLineRef(),
+			"0",
+			"files",
+			$this->getDavPathVersion()
 		);
 	}
 
@@ -1847,7 +1899,6 @@ trait WebDav {
 		?array $properties = null,
 		string $type = "files"
 	):ResponseInterface {
-		$user = $this->getActualUsername($user);
 		if ($this->customDavPath !== null) {
 			$path = $this->customDavPath . $path;
 		}
@@ -1861,7 +1912,7 @@ trait WebDav {
 			$this->getStepLineRef(),
 			$properties,
 			$type,
-			($this->usingOldDavPath) ? 1 : 2
+			$this->getDavPathVersion()
 		);
 	}
 
@@ -2006,6 +2057,7 @@ trait WebDav {
 		$this->setResponseXml(
 			HttpRequestHelper::parseResponseAsXml($this->response)
 		);
+		$this->pushToLastStatusCodesArrays();
 	}
 
 	/**
@@ -2023,6 +2075,8 @@ trait WebDav {
 			["201", "204"],
 			"HTTP status code was not 201 or 204 while trying to upload file '$source' to '$destination' for user '$user'"
 		);
+		$this->emptyLastHTTPStatusCodesArray();
+		$this->emptyLastOCSStatusCodesArray();
 	}
 
 	/**
@@ -2121,7 +2175,7 @@ trait WebDav {
 				$destination,
 				$this->getStepLineRef(),
 				$headers,
-				($this->usingOldDavPath) ? 1 : 2,
+				$this->getDavPathVersion(),
 				$chunkingVersion,
 				$noOfChunks
 			);
@@ -2164,7 +2218,7 @@ trait WebDav {
 		);
 		//use the chunking version that works with the set DAV version
 		if ($chunkingVersion === null) {
-			if ($this->usingOldDavPath) {
+			if ($this->usingOldDavPath || $this->usingSpacesDavPath) {
 				$chunkingVersion = "v1";
 			} else {
 				$chunkingVersion = "v2";
@@ -2173,7 +2227,7 @@ trait WebDav {
 		$this->useSpecificChunking($chunkingVersion);
 		Assert::assertTrue(
 			WebDavHelper::isValidDavChunkingCombination(
-				($this->usingOldDavPath) ? 1 : 2,
+				$this->getDavPathVersion(),
 				$this->chunkingToUse
 			),
 			"invalid chunking/webdav version combination"
@@ -2405,6 +2459,60 @@ trait WebDav {
 	}
 
 	/**
+	 * @Then the HTTP status code of responses on each endpoint should be :statusCode respectively
+	 *
+	 * @param string $statusCodes
+	 *
+	 * @return void
+	 * @throws Exception
+	 */
+	public function theHTTPStatusCodeOfResponsesOnEachEndpointShouldBe(string $statusCodes):void {
+		$statusCodes = \explode(',', $statusCodes);
+		$count = \count($statusCodes);
+		if ($count === \count($this->lastHttpStatusCodesArray)) {
+			for ($i = 0; $i < $count; $i++) {
+				Assert::assertSame(
+					(int)\trim($statusCodes[$i]),
+					(int)$this->lastHttpStatusCodesArray[$i],
+					'Responses did not return expected HTTP status code'
+				);
+			}
+		} else {
+			throw new Exception(
+				'Expected HTTP status codes: "' . \implode(',', $statusCodes) .
+				'". Found HTTP status codes: "' . \implode(',', $this->lastHttpStatusCodesArray) . '"'
+			);
+		}
+	}
+
+	/**
+	 * @Then the OCS status code of responses on each endpoint should be :statusCode respectively
+	 *
+	 * @param string $statusCodes
+	 *
+	 * @return void
+	 * @throws Exception
+	 */
+	public function theOCStatusCodeOfResponsesOnEachEndpointShouldBe(string $statusCodes):void {
+		$statusCodes = \explode(',', $statusCodes);
+		$count = \count($statusCodes);
+		if ($count === \count($this->lastOCSStatusCodesArray)) {
+			for ($i = 0; $i < $count; $i++) {
+				Assert::assertSame(
+					(int)\trim($statusCodes[$i]),
+					(int)$this->lastOCSStatusCodesArray[$i],
+					'Responses did not return expected OCS status code'
+				);
+			}
+		} else {
+			throw new Exception(
+				'Expected OCS status codes: "' . \implode(',', $statusCodes) .
+				'". Found OCS status codes: "' . \implode(',', $this->lastOCSStatusCodesArray) . '"'
+			);
+		}
+	}
+
+	/**
 	 * @Then the HTTP status code of responses on all endpoints should be :statusCode1 or :statusCode2
 	 *
 	 * @param string $statusCode1
@@ -2477,6 +2585,10 @@ trait WebDav {
 	public function userShouldBeAbleToUploadFileTo(string $user, string $source, string $destination):void {
 		$user = $this->getActualUsername($user);
 		$this->userUploadsAFileTo($user, $source, $destination);
+		$this->theHTTPStatusCodeShouldBe(
+			["201", "204"],
+			"HTTP status code was not 201 or 204 while trying to upload file '$destination'"
+		);
 		$this->asFileOrFolderShouldExist($user, "file", $destination);
 	}
 
@@ -2903,7 +3015,8 @@ trait WebDav {
 			$this->acceptanceTestsDirLocation() . $source,
 			$destination,
 			$this->getStepLineRef(),
-			["X-OC-Mtime" => $mtime]
+			["X-OC-Mtime" => $mtime],
+			$this->getDavPathVersion()
 		);
 	}
 
@@ -2969,7 +3082,8 @@ trait WebDav {
 				$password,
 				$baseUrl,
 				$resource,
-				$this->getStepLineRef()
+				$this->getStepLineRef(),
+				$this->getDavPathVersion()
 			)
 		);
 	}
@@ -3001,7 +3115,8 @@ trait WebDav {
 				$password,
 				$baseUrl,
 				$resource,
-				$this->getStepLineRef()
+				$this->getStepLineRef(),
+				$this->getDavPathVersion()
 			)
 		);
 	}
@@ -3026,6 +3141,7 @@ trait WebDav {
 			["201", "204"],
 			"HTTP status code was not 201 or 204 while trying to upload file '$destination' for user '$user'"
 		);
+		$this->emptyLastHTTPStatusCodesArray();
 		return $fileId;
 	}
 
@@ -3075,7 +3191,7 @@ trait WebDav {
 	 * @return array
 	 * @throws Exception
 	 */
-	public function userHasUploadedFollowingFiles(
+	public function userHasUploadedFollowingFilesWithContent(
 		string $user,
 		?string $content,
 		TableNode $table
@@ -3090,6 +3206,28 @@ trait WebDav {
 		}
 
 		return $fileIds;
+	}
+
+	/**
+	 * @When /^user "([^"]*)" downloads the following files using the WebDAV API$/
+	 *
+	 * @param string $user
+	 * @param TableNode $table
+	 *
+	 * @return void
+	 * @throws Exception
+	 */
+	public function userDownloadsFollowingFiles(
+		string $user,
+		TableNode $table
+	):void {
+		$this->verifyTableNodeColumns($table, ["path"]);
+		$files = $table->getHash();
+		$this->emptyLastHTTPStatusCodesArray();
+		foreach ($files as $fileName) {
+			$this->downloadFileAsUserUsingPassword($user, $fileName["path"]);
+			$this->pushToLastStatusCodesArrays();
+		}
 	}
 
 	/**
@@ -3150,6 +3288,7 @@ trait WebDav {
 			$content
 		);
 		$this->lastUploadDeleteTime = \time();
+		$this->pushToLastStatusCodesArrays();
 	}
 
 	/**
@@ -3238,6 +3377,7 @@ trait WebDav {
 		$this->pauseUploadDelete();
 		$this->response = $this->makeDavRequest($user, 'DELETE', $file, []);
 		$this->lastUploadDeleteTime = \time();
+		$this->pushToLastStatusCodesArrays();
 	}
 
 	/**
@@ -3269,6 +3409,7 @@ trait WebDav {
 			["204"],
 			"HTTP status code was not 204 while trying to $deleteText $fileOrFolder '$entry' for user '$user'"
 		);
+		$this->emptyLastHTTPStatusCodesArray();
 	}
 
 	/**
@@ -3289,6 +3430,7 @@ trait WebDav {
 		foreach ($paths as $file) {
 			$this->userHasDeletedFile($user, $deletedOrUnshared, $fileOrFolder, $file["path"]);
 		}
+		$this->emptyLastHTTPStatusCodesArray();
 	}
 
 	/**
@@ -3350,6 +3492,7 @@ trait WebDav {
 		foreach ($table->getTable() as $entry) {
 			$entryName = $entry[0];
 			$this->response = $this->makeDavRequest($user, 'DELETE', $entryName, []);
+			$this->pushToLastStatusCodesArrays();
 		}
 		$this->lastUploadDeleteTime = \time();
 	}
@@ -3517,11 +3660,17 @@ trait WebDav {
 	 * @param string $destination
 	 *
 	 * @return void
+	 * @throws Exception
 	 */
 	public function userShouldNotBeAbleToCreateFolder(string $user, string $destination):void {
 		$user = $this->getActualUsername($user);
 		$this->userCreatesFolder($user, $destination);
 		$this->theHTTPStatusCodeShouldBeFailure();
+		$this->asFileOrFolderShouldNotExist(
+			$user,
+			"folder",
+			$destination
+		);
 	}
 
 	/**
@@ -3921,6 +4070,7 @@ trait WebDav {
 			$data,
 			"uploads"
 		);
+		$this->pushToLastStatusCodesArrays();
 	}
 
 	/**
@@ -4040,6 +4190,7 @@ trait WebDav {
 			$dest,
 			$headers
 		);
+		$this->pushToLastStatusCodesArrays();
 	}
 
 	/**
@@ -4098,6 +4249,7 @@ trait WebDav {
 			$dest,
 			$headers
 		);
+		$this->pushToLastStatusCodesArrays();
 	}
 
 	/**
@@ -4550,7 +4702,8 @@ trait WebDav {
 				$user,
 				$this->getPasswordForUser($user),
 				$path,
-				$this->getStepLineRef()
+				$this->getStepLineRef(),
+				$this->getDavPathVersion()
 			);
 		} catch (Exception $e) {
 			return null;
@@ -4558,33 +4711,36 @@ trait WebDav {
 	}
 
 	/**
-	 * @Given /^user "([^"]*)" has stored id of file "([^"]*)"$/
+	 * @Given /^user "([^"]*)" has stored id of (file|folder) "([^"]*)"$/
+	 * @When /^user "([^"]*)" stores id of (file|folder) "([^"]*)"$/
 	 *
 	 * @param string $user
+	 * @param string $fileOrFolder
 	 * @param string $path
 	 *
 	 * @return void
 	 */
-	public function userStoresFileIdForPath(string $user, string $path):void {
+	public function userStoresFileIdForPath(string $user, string $fileOrFolder, string $path):void {
 		$this->storedFileID = $this->getFileIdForPath($user, $path);
 	}
 
 	/**
-	 * @Then /^user "([^"]*)" file "([^"]*)" should have the previously stored id$/
+	 * @Then /^user "([^"]*)" (file|folder) "([^"]*)" should have the previously stored id$/
 	 *
 	 * @param string $user
+	 * @param string $fileOrFolder
 	 * @param string $path
 	 *
 	 * @return void
 	 */
-	public function userFileShouldHaveStoredId(string $user, string $path):void {
+	public function userFileShouldHaveStoredId(string $user, string $fileOrFolder, string $path):void {
 		$user = $this->getActualUsername($user);
 		$currentFileID = $this->getFileIdForPath($user, $path);
 		Assert::assertEquals(
 			$currentFileID,
 			$this->storedFileID,
 			__METHOD__
-			. " User '$user' file '$path' does not have the previously stored id '{$this->storedFileID}', but has '$currentFileID'."
+			. " User '$user' $fileOrFolder '$path' does not have the previously stored id '{$this->storedFileID}', but has '$currentFileID'."
 		);
 	}
 

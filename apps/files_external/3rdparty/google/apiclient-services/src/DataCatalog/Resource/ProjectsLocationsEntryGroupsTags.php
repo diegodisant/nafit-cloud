@@ -33,8 +33,8 @@ class ProjectsLocationsEntryGroupsTags extends \Google\Service\Resource
 {
   /**
    * Creates a tag and assigns it to: * An Entry if the method name is
-   * ``projects.locations.entryGroups.entries.tags.create``. * Or EntryGroupif the
-   * method name is ``projects.locations.entryGroups.tags.create``. Note: The
+   * `projects.locations.entryGroups.entries.tags.create`. * Or EntryGroupif the
+   * method name is `projects.locations.entryGroups.tags.create`. Note: The
    * project identified by the `parent` parameter for the [tag]
    * (https://cloud.google.com/data-catalog/docs/reference/rest/v1/projects.locati
    * ons.entryGroups.entries.tags/create#path-parameters) and the [tag template]
@@ -71,7 +71,8 @@ class ProjectsLocationsEntryGroupsTags extends \Google\Service\Resource
     return $this->call('delete', [$params], DatacatalogEmpty::class);
   }
   /**
-   * Lists tags assigned to an Entry. (tags.listProjectsLocationsEntryGroupsTags)
+   * Lists tags assigned to an Entry. The columns in the response are lowercased.
+   * (tags.listProjectsLocationsEntryGroupsTags)
    *
    * @param string $parent Required. The name of the Data Catalog resource to list
    * the tags of. The resource can be an Entry or an EntryGroup (without

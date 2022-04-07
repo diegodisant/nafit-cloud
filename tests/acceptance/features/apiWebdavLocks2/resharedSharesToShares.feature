@@ -22,11 +22,9 @@ Feature: lock should propagate correctly if a share is reshared
     And user "Alice" has locked folder "PARENT" setting the following properties
       | lockscope | <lock-scope> |
     When user "Carol" uploads file "filesForUpload/textfile.txt" to "/Shares/PARENT/textfile.txt" using the WebDAV API
-    Then the HTTP status code should be "423"
-    When user "Brian" uploads file "filesForUpload/textfile.txt" to "/Shares/PARENT/textfile.txt" using the WebDAV API
-    Then the HTTP status code should be "423"
-    When user "Alice" uploads file "filesForUpload/textfile.txt" to "/PARENT/textfile.txt" using the WebDAV API
-    Then the HTTP status code should be "423"
+    And user "Brian" uploads file "filesForUpload/textfile.txt" to "/Shares/PARENT/textfile.txt" using the WebDAV API
+    And user "Alice" uploads file "filesForUpload/textfile.txt" to "/PARENT/textfile.txt" using the WebDAV API
+    Then the HTTP status code of responses on all endpoints should be "423"
     And as "Alice" file "/PARENT/textfile.txt" should not exist
     Examples:
       | dav-path | lock-scope |
@@ -34,6 +32,13 @@ Feature: lock should propagate correctly if a share is reshared
       | old      | exclusive  |
       | new      | shared     |
       | new      | exclusive  |
+
+    @personalSpace @skipOnOcV10
+    Examples:
+      | dav-path | lock-scope |
+      | spaces   | shared     |
+      | spaces   | exclusive  |
+
 
   Scenario Outline: upload overwriting to a share that was locked by owner
     Given using <dav-path> DAV path
@@ -47,11 +52,9 @@ Feature: lock should propagate correctly if a share is reshared
     And user "Alice" has locked folder "PARENT" setting the following properties
       | lockscope | <lock-scope> |
     When user "Carol" uploads file "filesForUpload/textfile.txt" to "/Shares/PARENT/parent.txt" using the WebDAV API
-    Then the HTTP status code should be "423"
-    When user "Brian" uploads file "filesForUpload/textfile.txt" to "/Shares/PARENT/parent.txt" using the WebDAV API
-    Then the HTTP status code should be "423"
-    When user "Alice" uploads file "filesForUpload/textfile.txt" to "/PARENT/parent.txt" using the WebDAV API
-    Then the HTTP status code should be "423"
+    And user "Brian" uploads file "filesForUpload/textfile.txt" to "/Shares/PARENT/parent.txt" using the WebDAV API
+    And user "Alice" uploads file "filesForUpload/textfile.txt" to "/PARENT/parent.txt" using the WebDAV API
+    Then the HTTP status code of responses on all endpoints should be "423"
     And the content of file "/PARENT/parent.txt" for user "Alice" should be "ownCloud test text file parent"
     Examples:
       | dav-path | lock-scope |
@@ -59,6 +62,12 @@ Feature: lock should propagate correctly if a share is reshared
       | old      | exclusive  |
       | new      | shared     |
       | new      | exclusive  |
+
+    @personalSpace @skipOnOcV10
+    Examples:
+      | dav-path | lock-scope |
+      | spaces   | shared     |
+      | spaces   | exclusive  |
 
   @skipOnOcV10.6 @skipOnOcV10.7
   Scenario Outline: public uploads to a reshared share that was locked by original owner
@@ -80,21 +89,20 @@ Feature: lock should propagate correctly if a share is reshared
       | new      | shared     |
       | new      | exclusive  |
 
+
   Scenario Outline: upload to a share that was locked by owner but renamed before
     Given using <dav-path> DAV path
     And user "Alice" has shared folder "PARENT" with user "Brian"
     And user "Brian" has accepted share "/PARENT" offered by user "Alice"
     And user "Brian" has shared folder "Shares/PARENT" with user "Carol"
     And user "Carol" has accepted share "/PARENT" offered by user "Brian"
-    When user "Brian" moves folder "/Shares/PARENT" to "/PARENT-renamed" using the WebDAV API
-    And user "Alice" locks folder "PARENT" using the WebDAV API setting the following properties
+    And user "Brian" has moved folder "/Shares/PARENT" to "/PARENT-renamed"
+    And user "Alice" has locked folder "PARENT" setting the following properties
       | lockscope | <lock-scope> |
-    And user "Carol" uploads file "filesForUpload/textfile.txt" to "/Shares/PARENT/textfile.txt" using the WebDAV API
-    Then the HTTP status code should be "423"
-    When user "Brian" uploads file "filesForUpload/textfile.txt" to "/PARENT-renamed/textfile.txt" using the WebDAV API
-    Then the HTTP status code should be "423"
-    When user "Alice" uploads file "filesForUpload/textfile.txt" to "/PARENT/textfile.txt" using the WebDAV API
-    Then the HTTP status code should be "423"
+    When user "Carol" uploads file "filesForUpload/textfile.txt" to "/Shares/PARENT/textfile.txt" using the WebDAV API
+    And user "Brian" uploads file "filesForUpload/textfile.txt" to "/PARENT-renamed/textfile.txt" using the WebDAV API
+    And user "Alice" uploads file "filesForUpload/textfile.txt" to "/PARENT/textfile.txt" using the WebDAV API
+    Then the HTTP status code of responses on all endpoints should be "423"
     And as "Alice" file "/PARENT/textfile.txt" should not exist
     Examples:
       | dav-path | lock-scope |
@@ -102,6 +110,13 @@ Feature: lock should propagate correctly if a share is reshared
       | old      | exclusive  |
       | new      | shared     |
       | new      | exclusive  |
+
+    @personalSpace @skipOnOcV10
+    Examples:
+      | dav-path | lock-scope |
+      | spaces   | shared     |
+      | spaces   | exclusive  |
+
 
   Scenario Outline: upload to a share that was locked by the resharing user
     Given using <dav-path> DAV path
@@ -112,11 +127,9 @@ Feature: lock should propagate correctly if a share is reshared
     And user "Brian" has locked folder "Shares/PARENT" setting the following properties
       | lockscope | <lock-scope> |
     When user "Carol" uploads file "filesForUpload/textfile.txt" to "/Shares/PARENT/textfile.txt" using the WebDAV API
-    Then the HTTP status code should be "423"
-    When user "Brian" uploads file "filesForUpload/textfile.txt" to "/Shares/PARENT/textfile.txt" using the WebDAV API
-    Then the HTTP status code should be "423"
-    When user "Alice" uploads file "filesForUpload/textfile.txt" to "/PARENT/textfile.txt" using the WebDAV API
-    Then the HTTP status code should be "423"
+    And user "Brian" uploads file "filesForUpload/textfile.txt" to "/Shares/PARENT/textfile.txt" using the WebDAV API
+    And user "Alice" uploads file "filesForUpload/textfile.txt" to "/PARENT/textfile.txt" using the WebDAV API
+    Then the HTTP status code of responses on all endpoints should be "423"
     And as "Alice" file "/PARENT/textfile.txt" should not exist
     Examples:
       | dav-path | lock-scope |
@@ -124,3 +137,9 @@ Feature: lock should propagate correctly if a share is reshared
       | old      | exclusive  |
       | new      | shared     |
       | new      | exclusive  |
+
+    @personalSpace @skipOnOcV10
+    Examples:
+      | dav-path | lock-scope |
+      | spaces   | shared     |
+      | spaces   | exclusive  |

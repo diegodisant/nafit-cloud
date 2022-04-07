@@ -42,13 +42,13 @@ fi
 
 if [ -n "${EXPECTED_FAILURES_FILE}" ]
 then
-	if [ -f "${EXPECTED_FAILURES_FILE}" ]
+	# Check the expected-failures file
+	${SCRIPT_PATH}/lint-expected-failures.sh
+	LINT_STATUS=$?
+	if [ ${LINT_STATUS} -ne 0 ]
 	then
-		echo "Checking expected failures in ${EXPECTED_FAILURES_FILE}"
-	else
-		echo "Expected failures file ${EXPECTED_FAILURES_FILE} not found"
-		echo "Check the setting of EXPECTED_FAILURES_FILE environment variable"
-		exit 1
+		echo "Error: expected failures file ${EXPECTED_FAILURES_FILE} is invalid"
+		exit ${LINT_STATUS}
 	fi
 fi
 

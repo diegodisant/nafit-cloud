@@ -38,6 +38,7 @@ use TestHelpers\HttpRequestHelper;
 use TestHelpers\UploadHelper;
 use TestHelpers\OcisHelper;
 use Laminas\Ldap\Ldap;
+use TestHelpers\WebDavHelper;
 
 require_once 'bootstrap.php';
 
@@ -82,7 +83,7 @@ class FeatureContext extends BehatVariablesContext {
 	/**
 	 * An array of values of replacement values of user attributes.
 	 * These are only referenced when creating a user. After that, the
-	 * run-time values are maintained and referenced in the $createUsers array.
+	 * run-time values are maintained and referenced in the $createdUsers array.
 	 *
 	 * Key is the username, value is an array of user attributes
 	 *
@@ -439,7 +440,7 @@ class FeatureContext extends BehatVariablesContext {
 	/**
 	 * @var string
 	 */
-	private $ldapAdminPassword;
+	private $ldapAdminPassword = "";
 	/**
 	 * @var string
 	 */
@@ -448,6 +449,14 @@ class FeatureContext extends BehatVariablesContext {
 	 * @var string
 	 */
 	private $ldapGroupsOU;
+	/**
+	 * @var string
+	 */
+	private $ldapGroupSchema;
+	/**
+	 * @var bool
+	 */
+	private $skipImportLdif;
 	/**
 	 * @var array
 	 */
@@ -1652,6 +1661,25 @@ class FeatureContext extends BehatVariablesContext {
 	}
 
 	/**
+	 * Check the text in an HTTP responseXml message
+	 *
+	 * @Then /^the HTTP response message should be "([^"]*)"$/
+	 *
+	 * @param string $expectedMessage
+	 *
+	 * @return void
+	 * @throws Exception
+	 */
+	public function theHttpResponseMessageShouldBe(string $expectedMessage):void {
+		$actualMessage = $this->responseXml['value'][1]['value'];
+		Assert::assertEquals(
+			$expectedMessage,
+			$actualMessage,
+			"Expected $expectedMessage HTTP response message but got $actualMessage"
+		);
+	}
+
+	/**
 	 * Check the text in an HTTP reason phrase
 	 *
 	 * @Then /^the HTTP reason phrase should be "([^"]*)"$/
@@ -2603,7 +2631,7 @@ class FeatureContext extends BehatVariablesContext {
 
 		if (!\strlen($edition)) {
 			Assert::fail(
-				"Cannot get edition from capabilities"
+				"Cannot get edition from core capabilities"
 			);
 		}
 
@@ -2615,41 +2643,96 @@ class FeatureContext extends BehatVariablesContext {
 
 		if (!\strlen($edition)) {
 			Assert::fail(
-				"Cannot get productname from capabilities"
+				"Cannot get productname from core capabilities"
 			);
 		}
 
 		$jsonExpectedDecoded['edition'] = $edition;
+		$jsonExpectedDecoded['product'] = $productName;
 		$jsonExpectedDecoded['productname'] = $productName;
 
-		$runOccStatus = $this->runOcc(['status']);
-		if ($runOccStatus === 0) {
-			$output = \explode("- ", $this->lastStdOut);
-			$version = \explode(": ", $output[3]);
-			Assert::assertEquals(
-				"version",
-				$version[0],
-				"Expected 'version' but got $version[0]"
-			);
-			$versionString = \explode(": ", $output[4]);
-			Assert::assertEquals(
-				"versionstring",
-				$versionString[0],
-				"Expected 'versionstring' but got $versionString[0]"
-			);
-			$jsonExpectedDecoded['version'] = \trim($version[1]);
-			$jsonExpectedDecoded['versionstring'] = \trim($versionString[1]);
-			$jsonExpectedEncoded = \json_encode($jsonExpectedDecoded);
-			Assert::assertEquals(
-				$jsonExpectedEncoded,
-				$jsonRespondedEncoded,
-				"The json responded: $jsonRespondedEncoded does not match with json expected: $jsonExpectedEncoded"
-			);
+		if (OcisHelper::isTestingOnOc10()) {
+			// On oC10 get the expected version values by parsing the output of "occ status"
+			$runOccStatus = $this->runOcc(['status']);
+			if ($runOccStatus === 0) {
+				$output = \explode("- ", $this->lastStdOut);
+				$version = \explode(": ", $output[3]);
+				Assert::assertEquals(
+					"version",
+					$version[0],
+					"Expected 'version' but got $version[0]"
+				);
+				$versionString = \explode(": ", $output[4]);
+				Assert::assertEquals(
+					"versionstring",
+					$versionString[0],
+					"Expected 'versionstring' but got $versionString[0]"
+				);
+				$jsonExpectedDecoded['version'] = \trim($version[1]);
+				$jsonExpectedDecoded['versionstring'] = \trim($versionString[1]);
+			} else {
+				Assert::fail(
+					"Cannot get version variables from occ - status $runOccStatus"
+				);
+			}
 		} else {
-			Assert::fail(
-				"Cannot get version variables from occ - status $runOccStatus"
+			// We are on oCIS or reva or some other implementation. We cannot do "occ status".
+			// So get the expected version values by looking in the capabilities response.
+			$version = $this->appConfigurationContext->getParameterValueFromXml(
+				$this->appConfigurationContext->getCapabilitiesXml(__METHOD__),
+				'core',
+				'status@@@version'
 			);
+
+			if (!\strlen($version)) {
+				Assert::fail(
+					"Cannot get version from core capabilities"
+				);
+			}
+
+			$versionString = $this->appConfigurationContext->getParameterValueFromXml(
+				$this->appConfigurationContext->getCapabilitiesXml(__METHOD__),
+				'core',
+				'status@@@versionstring'
+			);
+
+			if (!\strlen($versionString)) {
+				Assert::fail(
+					"Cannot get versionstring from core capabilities"
+				);
+			}
+
+			$jsonExpectedDecoded['version'] = $version;
+			$jsonExpectedDecoded['versionstring'] = $versionString;
 		}
+		$jsonExpectedEncoded = \json_encode($jsonExpectedDecoded);
+		Assert::assertEquals(
+			$jsonExpectedEncoded,
+			$jsonRespondedEncoded,
+			"The json responded: $jsonRespondedEncoded does not match with json expected: $jsonExpectedEncoded"
+		);
+		// We have checked that the status.php response has data that matches up with
+		// data found in the capabilities response and/or the "occ status" command output.
+		// But the output might be reported wrongly in all of these in the same way.
+		// So check that the values also seem "reasonable".
+		$version = $jsonExpectedDecoded['version'];
+		$versionString = $jsonExpectedDecoded['versionstring'];
+		Assert::assertMatchesRegularExpression(
+			"/^\d+\.\d+\.\d+\.\d+$/",
+			$version,
+			"version should be in a form like 10.9.8.1 but is $version"
+		);
+		if (\preg_match("/^\d+\.\d+\.\d+/", $version, $matches)) {
+			// We should have matched something like 10.9.8 - the first 3 numbers in the version.
+			$majorMinorPatchVersion = $matches[0];
+		} else {
+			Assert::fail("version '$version' does not start in a form like 10.9.8");
+		}
+		Assert::assertStringStartsWith(
+			$majorMinorPatchVersion,
+			$versionString,
+			"versionstring should start with $majorMinorPatchVersion but is $versionString"
+		);
 	}
 
 	/**
@@ -3089,6 +3172,14 @@ class FeatureContext extends BehatVariablesContext {
 						"getEmailAddressForUser"
 					],
 					"parameter" => [$user]
+				],
+				[
+					"code" => "%spaceid%",
+					"function" => [
+						$this,
+						"getPersonalSpaceIdForUser",
+					],
+					"parameter" => [$user, true]
 				]
 			);
 		}
@@ -3119,6 +3210,29 @@ class FeatureContext extends BehatVariablesContext {
 			);
 		}
 		return $value;
+	}
+
+	/**
+	 * returns personal space id for user if the test is using the spaces dav path
+	 * or if alwaysDoIt is set to true,
+	 * otherwise it returns null.
+	 *
+	 * @param string $user
+	 * @param bool $alwaysDoIt default false. Set to true
+	 *
+	 * @return string|null
+	 * @throws GuzzleException
+	 */
+	public function getPersonalSpaceIdForUser(string $user, bool $alwaysDoIt = false): ?string {
+		if ($alwaysDoIt || ($this->getDavPathVersion() === WebDavHelper::DAV_VERSION_SPACES)) {
+			return WebDavHelper::getPersonalSpaceIdForUser(
+				$this->getBaseUrl(),
+				$user,
+				$this->getPasswordForUser($user),
+				$this->getStepLineRef()
+			);
+		}
+		return null;
 	}
 
 	/**
@@ -3607,6 +3721,20 @@ class FeatureContext extends BehatVariablesContext {
 			if ($this->remoteBaseUrl !== $this->localBaseUrl) {
 				$this->clearFileLocksForServer($this->getRemoteBaseUrl());
 			}
+		}
+	}
+
+	/**
+	 * @AfterScenario
+	 *
+	 * clear space id reference
+	 *
+	 * @return void
+	 * @throws Exception
+	 */
+	public function clearSpaceId():void {
+		if (\count(WebDavHelper::$spacesIdRef) > 0) {
+			WebDavHelper::$spacesIdRef = [];
 		}
 	}
 

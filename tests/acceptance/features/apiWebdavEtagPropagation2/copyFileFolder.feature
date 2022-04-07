@@ -12,7 +12,8 @@ Feature: propagation of etags when copying files or folders
     And user "Alice" has stored etag of element "/file.txt"
     And user "Alice" has stored etag of element "/file.txt" on path "/renamedFile.txt"
     When user "Alice" copies file "/file.txt" to "/renamedFile.txt" using the WebDAV API
-    Then these etags should not have changed:
+    Then the HTTP status code should be "201"
+    And these etags should not have changed:
       | user  | path      |
       | Alice | /file.txt |
     And these etags should have changed:
@@ -24,6 +25,11 @@ Feature: propagation of etags when copying files or folders
       | old         |
       | new         |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
   @skipOnOcis-OC-Storage @issue-product-280
   Scenario Outline: copying a file inside a folder changes its etag
     Given using <dav_version> DAV path
@@ -33,7 +39,8 @@ Feature: propagation of etags when copying files or folders
     And user "Alice" has stored etag of element "/folder"
     And user "Alice" has stored etag of element "/file.txt" on path "/folder/renamedFile.txt"
     When user "Alice" copies file "/file.txt" to "/folder/renamedFile.txt" using the WebDAV API
-    Then these etags should not have changed:
+    Then the HTTP status code should be "201"
+    And these etags should not have changed:
       | user  | path      |
       | Alice | /file.txt |
     And these etags should have changed:
@@ -45,6 +52,11 @@ Feature: propagation of etags when copying files or folders
       | old         |
       | new         |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
   @skipOnOcis-OC-Storage @issue-product-280
   Scenario Outline: copying a file from one folder to an other changes the etags of destination
     Given using <dav_version> DAV path
@@ -55,7 +67,8 @@ Feature: propagation of etags when copying files or folders
     And user "Alice" has stored etag of element "/src"
     And user "Alice" has stored etag of element "/dst"
     When user "Alice" copies folder "/src/file.txt" to "/dst/file.txt" using the WebDAV API
-    Then these etags should have changed:
+    Then the HTTP status code should be "201"
+    And these etags should have changed:
       | user  | path |
       | Alice | /    |
       | Alice | /dst |
@@ -66,6 +79,11 @@ Feature: propagation of etags when copying files or folders
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @skipOnOcis-OC-Storage @issue-product-280
   Scenario Outline: copying a file into a subfolder changes the etags of all parents
@@ -79,7 +97,8 @@ Feature: propagation of etags when copying files or folders
     And user "Alice" has stored etag of element "/upload/file.txt" on path "/upload/sub/file.txt"
     And user "Alice" has stored etag of element "/upload/sub"
     When user "Alice" copies file "/upload/file.txt" to "/upload/sub/file.txt" using the WebDAV API
-    Then these etags should have changed:
+    Then the HTTP status code should be "201"
+    And these etags should have changed:
       | user  | path                 |
       | Alice | /                    |
       | Alice | /upload              |
@@ -92,6 +111,11 @@ Feature: propagation of etags when copying files or folders
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @skipOnOcis-OC-Storage @issue-product-280
   Scenario Outline: copying a file inside a publicly shared folder by public changes etag for the sharer
@@ -106,7 +130,8 @@ Feature: propagation of etags when copying files or folders
     And user "Alice" has stored etag of element "/upload/file.txt"
     And user "Alice" has stored etag of element "/upload/file.txt" on path "/upload/renamedFile.txt"
     When the public copies file "file.txt" to "/renamedFile.txt" using the new public WebDAV API
-    Then these etags should have changed:
+    Then the HTTP status code should be "201"
+    And these etags should have changed:
       | user  | path                    |
       | Alice | /                       |
       | Alice | /upload                 |
@@ -118,6 +143,11 @@ Feature: propagation of etags when copying files or folders
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @skipOnOcV10.6 @skipOnOcV10.7 @skipOnOcV10.8.0
   Scenario Outline: as share receiver copying a file inside a folder changes its etag for all collaborators
@@ -139,7 +169,8 @@ Feature: propagation of etags when copying files or folders
     And user "Brian" has stored etag of element "/Shares/upload/file.txt"
     And user "Brian" has stored etag of element "/Shares/upload/file.txt" on path "/Shares/upload/renamed.txt"
     When user "Brian" copies file "/Shares/upload/file.txt" to "/Shares/upload/renamed.txt" using the WebDAV API
-    Then these etags should have changed:
+    Then the HTTP status code should be "201"
+    And these etags should have changed:
       | user  | path                       |
       | Alice | /                          |
       | Alice | /upload                    |
@@ -156,6 +187,11 @@ Feature: propagation of etags when copying files or folders
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @skipOnOcis-OC-Storage @issue-product-280 @skipOnOcV10.6 @skipOnOcV10.7 @skipOnOcV10.8.0
   Scenario Outline: as sharer copying a file inside a folder changes its etag for all collaborators
@@ -177,7 +213,8 @@ Feature: propagation of etags when copying files or folders
     And user "Brian" has stored etag of element "/Shares/upload/file.txt"
     And user "Brian" has stored etag of element "/Shares/upload/file.txt" on path "/Shares/upload/renamed.txt"
     When user "Alice" copies file "/upload/file.txt" to "/upload/renamed.txt" using the WebDAV API
-    Then these etags should have changed:
+    Then the HTTP status code should be "201"
+    And these etags should have changed:
       | user  | path                       |
       | Alice | /                          |
       | Alice | /upload                    |
@@ -194,3 +231,8 @@ Feature: propagation of etags when copying files or folders
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |

@@ -23,11 +23,12 @@ use Google\Client;
  * Service definition for Datapipelines (v1).
  *
  * <p>
-</p>
+ * Data Pipelines provides an interface for creating, updating, and managing
+ * recurring Data Analytics jobs.</p>
  *
  * <p>
  * For more information about this service, see the API
- * <a href="https://developers.google.com/apis-explorer/#search/dataflow" target="_blank">Documentation</a>
+ * <a href="https://cloud.google.com/dataflow/docs/guides/data-pipelines" target="_blank">Documentation</a>
  * </p>
  *
  * @author Google, Inc.
@@ -40,6 +41,7 @@ class Datapipelines extends \Google\Service
 
   public $projects_locations;
   public $projects_locations_pipelines;
+  public $projects_locations_pipelines_jobs;
 
   /**
    * Constructs the internal representation of the Datapipelines service.
@@ -157,6 +159,34 @@ class Datapipelines extends \Google\Service
                   'location' => 'path',
                   'type' => 'string',
                   'required' => true,
+                ],
+              ],
+            ],
+          ]
+        ]
+    );
+    $this->projects_locations_pipelines_jobs = new Datapipelines\Resource\ProjectsLocationsPipelinesJobs(
+        $this,
+        $this->serviceName,
+        'jobs',
+        [
+          'methods' => [
+            'list' => [
+              'path' => 'v1/{+parent}/jobs',
+              'httpMethod' => 'GET',
+              'parameters' => [
+                'parent' => [
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ],
+                'pageSize' => [
+                  'location' => 'query',
+                  'type' => 'integer',
+                ],
+                'pageToken' => [
+                  'location' => 'query',
+                  'type' => 'string',
                 ],
               ],
             ],

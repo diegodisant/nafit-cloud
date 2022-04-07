@@ -3,22 +3,46 @@ Changelog for ownCloud Core [unreleased] (UNRELEASED)
 The following sections list the changes in ownCloud core unreleased relevant to
 ownCloud admins and users.
 
-[unreleased]: https://github.com/owncloud/core/compare/v10.9.0...master
+[unreleased]: https://github.com/owncloud/core/compare/v10.9.1...master
 
 Summary
 -------
 
+* Security - Prevent stored mail settings password from showing in the webUI: [#39833](https://github.com/owncloud/core/pull/39833)
 * Bugfix - Properly setup share owner file system on public link shares: [#39518](https://github.com/owncloud/core/pull/39518)
 * Bugfix - Prevent group names starting or ending with white space: [#39540](https://github.com/owncloud/core/pull/39540)
 * Bugfix - Set page title for the tags file list: [#39556](https://github.com/owncloud/core/issues/39556)
 * Bugfix - Don't resend invitation mail if a user is guest: [#39602](https://github.com/owncloud/core/pull/39602)
-* Bugfix - Prevent encrypted files from being corrupted when overwriting them: [#39623](https://github.com/owncloud/core/pull/39623)
+* Bugfix - Text previews had faulty content if BOM was present: [#39669](https://github.com/owncloud/core/pull/39669)
+* Bugfix - Fix files:checksums:verify for a single file: [#39683](https://github.com/owncloud/core/pull/39683)
+* Bugfix - Moving a file from one folder into a folder that is a number fails: [#39702](https://github.com/owncloud/core/issues/39702)
+* Bugfix - Make licenses expire at the end of the expiration date: [#39735](https://github.com/owncloud/core/pull/39735)
+* Bugfix - Subadmin will be shown only his assignable groups in the users page: [#39752](https://github.com/owncloud/core/pull/39752)
+* Bugfix - Fix wrong formatted XML in public-files dav endpoint: [#39797](https://github.com/owncloud/core/pull/39797)
+* Bugfix - Fix issue restoring versions from the trashbin after sharing: [#39822](https://github.com/owncloud/core/pull/39822)
+* Bugfix - Fix issue when encryption is enabled and a file is moved out of the share: [#39829](https://github.com/owncloud/core/pull/39829)
+* Bugfix - Avoid sending unneeded passwords in the files_external app: [#39841](https://github.com/owncloud/core/pull/39841)
+* Bugfix - Fix issue with requesting an invalid share id: [#39868](https://github.com/owncloud/core/issues/39868)
+* Bugfix - Remove fr_FR language variant: [#39931](https://github.com/owncloud/core/issues/39931)
+* Change - Update the default poll-interval in capabilities: [#39143](https://github.com/owncloud/core/pull/39143)
+* Change - Update JavaScript dependencies: [#39709](https://github.com/owncloud/core/pull/39709)
 * Change - Update PHP dependencies: [#39526](https://github.com/owncloud/core/pull/39526)
 * Change - Update Symfony components: [#39526](https://github.com/owncloud/core/pull/39526)
 * Enhancement - Allow OPTIONS request handling in framework controllers: [#38758](https://github.com/owncloud/core/pull/38758)
+* Enhancement - Unify API responses when setting permissions for public links: [#39194](https://github.com/owncloud/core/pull/39194)
+* Enhancement - Add warnings for commands that are incompatible with object storage: [#39604](https://github.com/owncloud/core/pull/39604)
+* Enhancement - Add product to version in capabilities response: [#39851](https://github.com/owncloud/core/pull/39851)
+* Enhancement - Allow files_external app to be disabled: [#39856](https://github.com/owncloud/core/pull/39856)
+* Enhancement - Improve FileDrop view: [#39900](https://github.com/owncloud/core/pull/39900)
+* Enhancement - Align "close" for messages: [#39907](https://github.com/owncloud/core/pull/39907)
 
 Details
 -------
+
+* Security - Prevent stored mail settings password from showing in the webUI: [#39833](https://github.com/owncloud/core/pull/39833)
+
+   https://github.com/owncloud/enterprise/issues/5035
+   https://github.com/owncloud/core/pull/39833
 
 * Bugfix - Properly setup share owner file system on public link shares: [#39518](https://github.com/owncloud/core/pull/39518)
 
@@ -41,6 +65,243 @@ Details
    https://github.com/owncloud/enterprise/issues/4868
    https://github.com/owncloud/core/pull/39602
 
+* Bugfix - Text previews had faulty content if BOM was present: [#39669](https://github.com/owncloud/core/pull/39669)
+
+   The BOM was incorrectly detected and was causing ownCloud to choose the wrong font for the text,
+   showing unexpected results. The BOM is now processed correctly and the preview is shown as
+   expected
+
+   https://github.com/owncloud/core/pull/39669
+
+* Bugfix - Fix files:checksums:verify for a single file: [#39683](https://github.com/owncloud/core/pull/39683)
+
+   Fixed an issue where running files:checksums:verify for a single file would fail.
+
+   https://github.com/owncloud/core/pull/39683
+
+* Bugfix - Moving a file from one folder into a folder that is a number fails: [#39702](https://github.com/owncloud/core/issues/39702)
+
+   The issue is fixed by updating sabre/dav from 4.3.0 to 4.3.1
+
+   https://github.com/owncloud/core/issues/39702
+   https://github.com/owncloud/core/pull/39703
+
+* Bugfix - Make licenses expire at the end of the expiration date: [#39735](https://github.com/owncloud/core/pull/39735)
+
+   https://github.com/owncloud/core/pull/39735
+
+* Bugfix - Subadmin will be shown only his assignable groups in the users page: [#39752](https://github.com/owncloud/core/pull/39752)
+
+   Previously, the subadmin could see all groups even if he could only assign users to a bunch of
+   them. Now the subadmin will see the groups he can assign to the user
+
+   https://github.com/owncloud/core/pull/39752
+
+* Bugfix - Fix wrong formatted XML in public-files dav endpoint: [#39797](https://github.com/owncloud/core/pull/39797)
+
+   Previously, trying to perform a PROPFIND over the public-files endpoint could cause an
+   exception to be thrown, which would generate a wrong formatted XML response. Now, the XML
+   response is properly formatted and can be parsed without problems.
+
+   https://github.com/owncloud/core/pull/39797
+
+* Bugfix - Fix issue restoring versions from the trashbin after sharing: [#39822](https://github.com/owncloud/core/pull/39822)
+
+   Previously, having encryption enabled, if a user shared a folder with another user, and that
+   new user removed a file inside that shared folder, that file ended up in the new user's trashbin
+   along with the file's versions. Restoring that file from the trashbin caused the versions of
+   that file to get broken due to a bad signature. The file was restored correctly. Now, the
+   versions are also restored correctly from the trashbin too.
+
+   https://github.com/owncloud/core/pull/39822
+
+* Bugfix - Fix issue when encryption is enabled and a file is moved out of the share: [#39829](https://github.com/owncloud/core/pull/39829)
+
+   When encryption was used, moving a file out of a shared folder caused the versions of the file to
+   get broken. The file was moved correctly though. This happened due to the key file not being
+   copied to the new location and a new key file being generated for the file. Now, the key file is
+   properly copied to the new location, so the versions can be decrypted properly.
+
+   https://github.com/owncloud/core/pull/39829
+
+* Bugfix - Avoid sending unneeded passwords in the files_external app: [#39841](https://github.com/owncloud/core/pull/39841)
+
+   Some passwords were being sent to the web UI in the external storage configuration. These
+   passwords aren't required and they're now replaced in the web UI in order not to leak the actual
+   password
+
+   https://github.com/owncloud/core/pull/39841
+
+* Bugfix - Fix issue with requesting an invalid share id: [#39868](https://github.com/owncloud/core/issues/39868)
+
+   When using the pgsql database and requesting an invalid share id, a 500 error status could be
+   returned. This has been fixed. A 404 "not found" is now returned.
+
+   https://github.com/owncloud/core/issues/39868
+   https://github.com/owncloud/core/pull/39873
+
+* Bugfix - Remove fr_FR language variant: [#39931](https://github.com/owncloud/core/issues/39931)
+
+   French translations were in both the "fr" and the "fr_FR" language codes. "fr_FR" had very few
+   translations and could cause missing translations when the system did not automatically
+   choose "fr". The "fr_FR" translations have been removed. Translators should use "fr" when
+   doing translations in Transifex.
+
+   https://github.com/owncloud/core/issues/39931
+   https://github.com/owncloud/core/pull/39939
+
+* Change - Update the default poll-interval in capabilities: [#39143](https://github.com/owncloud/core/pull/39143)
+
+   The default pollinterval advertised in capabilities has been set to 30000 milliseconds.
+   Previously it was 60 milliseconds.
+
+   https://github.com/owncloud/core/pull/39143
+
+* Change - Update JavaScript dependencies: [#39709](https://github.com/owncloud/core/pull/39709)
+
+   The following have been updated: - ansi-regex (3.0.0 to 3.0.1) - bower_components/showdown
+   (1.9.1 to 2.0.0) - bower_components/underscore (1.13.1 to 1.13.2) - follow-redirects
+   (1.14.2 to 1.14.8) - karma (6.3.8 to 6.3.16) - karma-coverage (2.0.3 to 2.2.0) - log4js (6.3.0
+   to 6.4.1) - minimist (1.2.5 to 1.2.6)
+
+   https://github.com/owncloud/core/pull/39709
+   https://github.com/owncloud/core/pull/39763
+   https://github.com/owncloud/core/pull/39764
+   https://github.com/owncloud/core/pull/39785
+   https://github.com/owncloud/core/pull/39788
+   https://github.com/owncloud/core/pull/39814
+   https://github.com/owncloud/core/pull/39816
+   https://github.com/owncloud/core/pull/39838
+   https://github.com/owncloud/core/pull/39926
+   https://github.com/owncloud/core/pull/39941
+
+* Change - Update PHP dependencies: [#39526](https://github.com/owncloud/core/pull/39526)
+
+   The following have been updated: - christophwurst/id3parser (v0.1.3 to v0.1.4) -
+   doctrine/dbal (2.13.5 to 2.13.8) - doctrine/lexer (1.2.1 to 1.2.3) -
+   laminas/laminas-inputfilter (2.12.0 to 2.12.1) - laminas/laminas-stdlib (3.6.1 to 3.7.1)
+   - laminas/laminas-validator (2.15.0 to 2.17.0) - laminas/laminas-zendframework-bridge
+   (1.4.0 to 1.4.1) - league/flysystem (1.1.5 to 1.1.9) - league/mime-type-detection (1.8.0 to
+   1.9.0) - opis/closure (3.6.2 to 3.6.3) - paragonie/constant_time_encoding (2.4.0 to 2.5.0)
+   - phpseclib/phpseclib (3.0.11 to 3.0.14) - sabre/dav (4.2.0 to 4.3.1) - sabre/vobject (4.4.0
+   to 4.4.1)
+
+   The following have been updated in apps/files_external/3rdparty: - google/apiclient
+   (2.11.0 to 2.12.1) - google/apiclient-services (0.231.0 to 0.242.0) - guzzlehttp/psr7
+   (1.8.3 to 1.8.5) - icewind/smb (3.5.1 to 3.5.2) - monolog/monolog (2.3.5 to 2.4.0) -
+   paragonie/constant_time_encoding (v2.4.0 to v2.5.0) - phpseclib/phpseclib (3.0.11 to
+   3.0.14) - react/promise (v2.8.0 to v2.9.0)
+
+   https://github.com/owncloud/core/pull/39526
+   https://github.com/owncloud/core/pull/39567
+   https://github.com/owncloud/core/pull/39631
+   https://github.com/owncloud/core/pull/39649
+   https://github.com/owncloud/core/pull/39693
+   https://github.com/owncloud/core/pull/39695
+   https://github.com/owncloud/core/pull/39703
+   https://github.com/owncloud/core/pull/39713
+   https://github.com/owncloud/core/pull/39717
+   https://github.com/owncloud/core/pull/39731
+   https://github.com/owncloud/core/pull/39780
+   https://github.com/owncloud/core/pull/39838
+   https://github.com/owncloud/core/pull/39859
+   https://github.com/owncloud/core/pull/39949
+   https://github.com/owncloud/core/pull/39956
+
+* Change - Update Symfony components: [#39526](https://github.com/owncloud/core/pull/39526)
+
+   The following Symfony components have been updated to: - console 4.4.40 - event-dispatcher
+   4.4.37 - event-dispatcher-contracts 4.4.34 - process 4.4.40 - routing 4.4.37 -
+   service-contracts 4.4.34 - translation 4.4.37 - translation-contracts 2.5.0
+
+   The following Symfony polyfill components have been updated to: - symfony/polyfill-ctype
+   v1.25.0 - symfony/polyfill-iconv v1.25.0 - symfony/polyfill-intl-idn v1.25.0 -
+   symfony/polyfill-intl-normalizer v1.25.0 - symfony/polyfill-mbstring v1.25.0 -
+   symfony/polyfill-php72 v1.25.0 - symfony/polyfill-php73 v1.25.0 -
+   symfony/polyfill-php80 v1.25.0
+
+   https://github.com/owncloud/core/pull/39526
+   https://github.com/owncloud/core/pull/39631
+   https://github.com/owncloud/core/pull/39646
+   https://github.com/owncloud/core/pull/39731
+   https://github.com/owncloud/core/pull/39838
+   https://github.com/owncloud/core/pull/39855
+   https://github.com/owncloud/core/pull/39940
+   https://symfony.com/blog/symfony-4-4-34-released
+   https://symfony.com/blog/symfony-4-4-36-released
+   https://symfony.com/blog/symfony-4-4-37-released
+   https://symfony.com/blog/symfony-4-4-38-released
+   https://symfony.com/blog/symfony-4-4-40-released
+
+* Enhancement - Allow OPTIONS request handling in framework controllers: [#38758](https://github.com/owncloud/core/pull/38758)
+
+   https://github.com/owncloud/core/pull/38758
+
+* Enhancement - Unify API responses when setting permissions for public links: [#39194](https://github.com/owncloud/core/pull/39194)
+
+   Setting (and changing) the permissions of public links via the OCS API will now return proper
+   and unified API responses. Adding create permissions while public uploading is disabled
+   globally will always return a 403 response.
+
+   https://github.com/owncloud/core/issues/36442
+   https://github.com/owncloud/core/issues/36443
+   https://github.com/owncloud/core/pull/39194
+
+* Enhancement - Add warnings for commands that are incompatible with object storage: [#39604](https://github.com/owncloud/core/pull/39604)
+
+   The following commands are affected:
+
+   * `user:home:list-users` * `user:home:list-homes` * `user:move` * `user:report`
+
+   https://github.com/owncloud/core/issues/39590
+   https://github.com/owncloud/core/pull/39604
+
+* Enhancement - Add product to version in capabilities response: [#39851](https://github.com/owncloud/core/pull/39851)
+
+   https://github.com/owncloud/core/pull/39851
+
+* Enhancement - Allow files_external app to be disabled: [#39856](https://github.com/owncloud/core/pull/39856)
+
+   Previously, the files_external app couldn't be disabled. The corresponding section in the
+   settings page had a checkbox to show or not the settings for the files_external app. Now, if the
+   app is disabled, that section won't appear. The behavior will be the same as any other disabled
+   app.
+
+   https://github.com/owncloud/core/pull/39856
+
+* Enhancement - Improve FileDrop view: [#39900](https://github.com/owncloud/core/pull/39900)
+
+   Small change in the design and behavior of the FileDrop view of Public Links.
+
+   - The font is bigger and thicker - Background color was added to the list of files - The text in the
+   "Dropbox" is wrapped properly, line-height was removed - Don't hide the logo on small
+   resolutions
+
+   https://github.com/owncloud/core/pull/39900
+
+* Enhancement - Align "close" for messages: [#39907](https://github.com/owncloud/core/pull/39907)
+
+   The close button for messages (yellow banner) was slightly displaced.
+
+   https://github.com/owncloud/core/pull/39907
+
+Changelog for ownCloud Core [10.9.1] (2022-01-12)
+=======================================
+The following sections list the changes in ownCloud core 10.9.1 relevant to
+ownCloud admins and users.
+
+[10.9.1]: https://github.com/owncloud/core/compare/v10.9.0...v10.9.1
+
+Summary
+-------
+
+* Bugfix - Prevent encrypted files from being corrupted when overwriting them: [#39623](https://github.com/owncloud/core/pull/39623)
+* Bugfix - Getting the file owner for share recipients: [#39670](https://github.com/owncloud/core/pull/39670)
+* Bugfix - Prevent version author from being overwritten with wrong uid: [#39673](https://github.com/owncloud/core/pull/39673)
+
+Details
+-------
+
 * Bugfix - Prevent encrypted files from being corrupted when overwriting them: [#39623](https://github.com/owncloud/core/pull/39623)
 
    Fixed an issue where overwriting an encrypted file by a share recipient would corrupt it. This
@@ -49,39 +310,21 @@ Details
    https://github.com/owncloud/encryption/issues/315
    https://github.com/owncloud/core/pull/39623
 
-* Change - Update PHP dependencies: [#39526](https://github.com/owncloud/core/pull/39526)
+* Bugfix - Getting the file owner for share recipients: [#39670](https://github.com/owncloud/core/pull/39670)
 
-   The following have been updated: - christophwurst/id3parser (v0.1.3 to v0.1.4) -
-   doctrine/dbal (2.13.5 => 2.13.6) - laminas/laminas-inputfilter (2.12.0 to 2.12.1) -
-   laminas/laminas-stdlib (3.6.1 to 3.6.4) - laminas/laminas-validator (2.15.0 to 2.15.1) -
-   laminas/laminas-zendframework-bridge (1.4.0 to 1.4.1) - league/flysystem (1.1.5 to
-   1.1.9) - league/mime-type-detection (1.8.0 to 1.9.0) - phpseclib/phpseclib (3.0.11 =>
-   3.0.12) - sabre/dav (4.2.0 to 4.3.0) - sabre/vobject (4.4.0 to 4.4.1)
+   Fixed a bug where a wrong file owner was retrieved when saving version authors. This scenario
+   happened for share recipients if they had a file with the same name as the shared file.
 
-   https://github.com/owncloud/core/pull/39526
-   https://github.com/owncloud/core/pull/39631
+   https://github.com/owncloud/core/issues/39662
+   https://github.com/owncloud/core/pull/39670
 
-* Change - Update Symfony components: [#39526](https://github.com/owncloud/core/pull/39526)
+* Bugfix - Prevent version author from being overwritten with wrong uid: [#39673](https://github.com/owncloud/core/pull/39673)
 
-   The following Symfony components have been updated to: - console 4.4.36 - event-dispatcher
-   4.4.34 - event-dispatcher-contracts 4.4.34 - process 4.4.36 - routing 4.4.34 -
-   service-contracts 4.4.34 - translation 4.4.32 - translation-contracts 2.5.0
+   Fixed an issue where restoring a previous version could lead to a wrong version author being
+   saved, basically overwriting the correct author.
 
-   The following Symfony polyfill components have been updated to: - symfony/polyfill-ctype
-   v1.24.0 - symfony/polyfill-iconv v1.24.0 - symfony/polyfill-intl-idn v1.24.0 -
-   symfony/polyfill-intl-normalizer v1.24.0 - symfony/polyfill-mbstring v1.24.0 -
-   symfony/polyfill-php72 v1.24.0 - symfony/polyfill-php73 v1.24.0 -
-   symfony/polyfill-php80 v1.24.0
-
-   https://github.com/owncloud/core/pull/39526
-   https://github.com/owncloud/core/pull/39631
-   https://github.com/owncloud/core/pull/39646
-   https://symfony.com/blog/symfony-4-4-34-released
-   https://symfony.com/blog/symfony-4-4-36-released
-
-* Enhancement - Allow OPTIONS request handling in framework controllers: [#38758](https://github.com/owncloud/core/pull/38758)
-
-   https://github.com/owncloud/core/pull/38758
+   https://github.com/owncloud/core/issues/39672
+   https://github.com/owncloud/core/pull/39673
 
 Changelog for ownCloud Core [10.9.0] (2021-12-20)
 =======================================

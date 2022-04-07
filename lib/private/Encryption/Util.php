@@ -32,6 +32,7 @@ use OC\Files\Filesystem;
 use OC\Files\View;
 use OCP\Encryption\IEncryptionModule;
 use OCP\Files\Storage;
+use OCP\Files\NotFoundException;
 use OCP\IConfig;
 use OCP\IUser;
 
@@ -227,20 +228,51 @@ class Util {
 	 * @throws \BadMethodCallException
 	 */
 	public function getUidAndFilename($path) {
-		$parts = \explode('/', $path);
-		$uid = '';
-		if (\count($parts) > 2) {
-			$uid = $parts[1];
-		}
-		if (!$this->userManager->userExists($uid)) {
-			throw new \BadMethodCallException(
-				'path needs to be relative to the system wide data folder and point to a user specific file'
-			);
+		list($storage, $internalPath) = $this->rootView->resolvePath($path);
+
+		$absMountPoint = $this->rootView->getMountPoint($path);
+		$parts = \explode('/', $absMountPoint);
+		// strip the first 2 directories (expected to be "/<user>/files/path/to/files")
+		// so mountPoint is expected to be "/files/path/to..."
+		$mountPoint = \implode('/', \array_slice($parts, 2));
+		if ($mountPoint !== '') {
+			$originalPath = "/{$mountPoint}/{$internalPath}";
+		} else {
+			$originalPath = "/{$internalPath}";
 		}
 
-		$ownerPath = \implode('/', \array_slice($parts, 2));
+		if ($storage->instanceOfStorage('\OCA\Files_Sharing\ISharedStorage')) {
+			// TODO: Improve sharedStorage detection.
+			// Note that ISharedStorage doesn't enforce any method
+			if ($storage->instanceOfStorage('\OCA\Files_Sharing\SharedStorage')) {
+				// local sharing
+				$share = $storage->getShare();
+				$node = $share->getNode();
+				$originalPath = "/{$node->getInternalPath()}/{$internalPath}";
+			} else {
+				// remote sharing
+				// FIXME: The original owner is a remote one who won't be present locally.
+				// However, keeping the previous behavior, we'll use the target user (obtained
+				// from the path) as owner. Fixing this properly requires heavy refactoring since
+				// the code requires the keys to have an owner and it isn't possible to return null
+				// to mark there is no local owner for the keys, or that the keys aren't
+				// locally available
+				return [$parts[1], $originalPath];
+			}
+		}
 
-		return [$uid, Filesystem::normalizePath($ownerPath)];
+		$checkingPath = "/{$internalPath}";
+		$ownerUid = null;
+		while ($ownerUid === null) {
+			try {
+				$ownerUid = $storage->getOwner($checkingPath);
+			} catch (NotFoundException $e) {
+				// if the path doesn't exist, try the parent.
+				$checkingPath = \dirname($checkingPath);
+			}
+		}
+
+		return [$ownerUid, $originalPath];
 	}
 
 	/**

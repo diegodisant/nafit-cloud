@@ -38,22 +38,22 @@ class ProjectsLocationsFeatures extends \Google\Service\Resource
   /**
    * Adds a new Feature. (features.create)
    *
-   * @param string $parent The parent (project and location) where the Feature
-   * will be created. Specified in the format `projects/locations`.
+   * @param string $parent Required. The parent (project and location) where the
+   * Feature will be created. Specified in the format `projects/locations`.
    * @param Feature $postBody
    * @param array $optParams Optional parameters.
    *
    * @opt_param string featureId The ID of the feature to create.
-   * @opt_param string requestId Optional. A request ID to identify requests.
-   * Specify a unique request ID so that if you must retry your request, the
-   * server will know to ignore the request if it has already been completed. The
-   * server will guarantee that for at least 60 minutes after the first request.
-   * For example, consider a situation where you make an initial request and the
-   * request times out. If you make the request again with the same request ID,
-   * the server can check if original operation with the same request ID was
-   * received, and if so, will ignore the second request. This prevents clients
-   * from accidentally creating duplicate commitments. The request ID must be a
-   * valid UUID with the exception that zero UUID is not supported
+   * @opt_param string requestId A request ID to identify requests. Specify a
+   * unique request ID so that if you must retry your request, the server will
+   * know to ignore the request if it has already been completed. The server will
+   * guarantee that for at least 60 minutes after the first request. For example,
+   * consider a situation where you make an initial request and the request times
+   * out. If you make the request again with the same request ID, the server can
+   * check if original operation with the same request ID was received, and if so,
+   * will ignore the second request. This prevents clients from accidentally
+   * creating duplicate commitments. The request ID must be a valid UUID with the
+   * exception that zero UUID is not supported
    * (00000000-0000-0000-0000-000000000000).
    * @return Operation
    */
@@ -66,7 +66,7 @@ class ProjectsLocationsFeatures extends \Google\Service\Resource
   /**
    * Removes a Feature. (features.delete)
    *
-   * @param string $name The Feature resource name in the format
+   * @param string $name Required. The Feature resource name in the format
    * `projects/locations/features`.
    * @param array $optParams Optional parameters.
    *
@@ -95,7 +95,7 @@ class ProjectsLocationsFeatures extends \Google\Service\Resource
   /**
    * Gets details of a single Feature. (features.get)
    *
-   * @param string $name The Feature resource name in the format
+   * @param string $name Required. The Feature resource name in the format
    * `projects/locations/features`
    * @param array $optParams Optional parameters.
    * @return Feature
@@ -115,12 +115,16 @@ class ProjectsLocationsFeatures extends \Google\Service\Resource
    * field.
    * @param array $optParams Optional parameters.
    *
-   * @opt_param int options.requestedPolicyVersion Optional. The policy format
-   * version to be returned. Valid values are 0, 1, and 3. Requests specifying an
-   * invalid value will be rejected. Requests for policies with any conditional
-   * bindings must specify version 3. Policies without any conditional bindings
-   * may specify any valid value or leave the field unset. To learn which
-   * resources support conditions in their IAM policies, see the [IAM
+   * @opt_param int options.requestedPolicyVersion Optional. The maximum policy
+   * version that will be used to format the policy. Valid values are 0, 1, and 3.
+   * Requests specifying an invalid value will be rejected. Requests for policies
+   * with any conditional role bindings must specify version 3. Policies with no
+   * conditional role bindings may specify any valid value or leave the field
+   * unset. The policy in the response might use the policy version that you
+   * specified, or it might use a lower policy version. For example, if you
+   * specify version 3, but the policy has no conditional role bindings, the
+   * response uses version 1. To learn which resources support conditions in their
+   * IAM policies, see the [IAM
    * documentation](https://cloud.google.com/iam/help/conditions/resource-
    * policies).
    * @return Policy
@@ -135,8 +139,8 @@ class ProjectsLocationsFeatures extends \Google\Service\Resource
    * Lists Features in a given project and location.
    * (features.listProjectsLocationsFeatures)
    *
-   * @param string $parent The parent (project and location) where the Features
-   * will be listed. Specified in the format `projects/locations`.
+   * @param string $parent Required. The parent (project and location) where the
+   * Features will be listed. Specified in the format `projects/locations`.
    * @param array $optParams Optional parameters.
    *
    * @opt_param string filter Lists Features that match the filter expression,
@@ -164,21 +168,21 @@ class ProjectsLocationsFeatures extends \Google\Service\Resource
   /**
    * Updates an existing Feature. (features.patch)
    *
-   * @param string $name The Feature resource name in the format
+   * @param string $name Required. The Feature resource name in the format
    * `projects/locations/features`.
    * @param Feature $postBody
    * @param array $optParams Optional parameters.
    *
-   * @opt_param string requestId Optional. A request ID to identify requests.
-   * Specify a unique request ID so that if you must retry your request, the
-   * server will know to ignore the request if it has already been completed. The
-   * server will guarantee that for at least 60 minutes after the first request.
-   * For example, consider a situation where you make an initial request and the
-   * request times out. If you make the request again with the same request ID,
-   * the server can check if original operation with the same request ID was
-   * received, and if so, will ignore the second request. This prevents clients
-   * from accidentally creating duplicate commitments. The request ID must be a
-   * valid UUID with the exception that zero UUID is not supported
+   * @opt_param string requestId A request ID to identify requests. Specify a
+   * unique request ID so that if you must retry your request, the server will
+   * know to ignore the request if it has already been completed. The server will
+   * guarantee that for at least 60 minutes after the first request. For example,
+   * consider a situation where you make an initial request and the request times
+   * out. If you make the request again with the same request ID, the server can
+   * check if original operation with the same request ID was received, and if so,
+   * will ignore the second request. This prevents clients from accidentally
+   * creating duplicate commitments. The request ID must be a valid UUID with the
+   * exception that zero UUID is not supported
    * (00000000-0000-0000-0000-000000000000).
    * @opt_param string updateMask Mask of fields to update.
    * @return Operation

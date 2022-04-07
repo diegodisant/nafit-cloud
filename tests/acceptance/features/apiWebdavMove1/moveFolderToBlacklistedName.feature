@@ -8,7 +8,7 @@ Feature: users cannot move (rename) a folder to a blacklisted name
     Given using OCS API version "1"
     And user "Alice" has been created with default attributes and without skeleton files
 
-  @issue-ocis-reva-211
+
   Scenario Outline: Rename a folder to a name that is banned by default
     Given using <dav_version> DAV path
     And user "Alice" has created folder "/testshare"
@@ -21,12 +21,17 @@ Feature: users cannot move (rename) a folder to a blacklisted name
       | old         |
       | new         |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
 
   Scenario Outline: Rename a folder to a banned name
     Given using <dav_version> DAV path
     And user "Alice" has created folder "/testshare"
-    When the administrator updates system config key "blacklisted_files" with value '["blacklisted-file.txt",".htaccess"]' and type "json" using the occ command
-    And user "Alice" moves folder "/testshare" to "/blacklisted-file.txt" using the WebDAV API
+    And the administrator has updated system config key "blacklisted_files" with value '["blacklisted-file.txt",".htaccess"]' and type "json"
+    When user "Alice" moves folder "/testshare" to "/blacklisted-file.txt" using the WebDAV API
     Then the HTTP status code should be "403"
     And user "Alice" should see the following elements
       | /testshare/ |
@@ -34,6 +39,11 @@ Feature: users cannot move (rename) a folder to a blacklisted name
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @skipOnOcV10.3
   Scenario Outline: rename a folder to a folder name that matches (or not) blacklisted_files_regex
@@ -70,3 +80,8 @@ Feature: users cannot move (rename) a folder to a blacklisted name
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |

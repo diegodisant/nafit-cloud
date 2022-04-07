@@ -25,6 +25,7 @@ use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use InvalidArgumentException;
+use PHPUnit\Framework\Assert;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use DateTime;
@@ -36,6 +37,9 @@ use DateTime;
  *
  */
 class WebDavHelper {
+	public const DAV_VERSION_OLD = 1;
+	public const DAV_VERSION_NEW = 2;
+	public const DAV_VERSION_SPACES = 3;
 
 	/**
 	 * @var array of users with their different spaces ids
@@ -50,6 +54,7 @@ class WebDavHelper {
 	 * @param string|null $password
 	 * @param string|null $path
 	 * @param string|null $xRequestId
+	 * @param int|null $davPathVersionToUse
 	 *
 	 * @return string
 	 * @throws Exception
@@ -59,15 +64,16 @@ class WebDavHelper {
 		?string $user,
 		?string $password,
 		?string $path,
-		?string $xRequestId = ''
+		?string $xRequestId = '',
+		?int $davPathVersionToUse = self::DAV_VERSION_NEW
 	): string {
 		$body
 			= '<?xml version="1.0"?>
-<d:propfind  xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns">
-  <d:prop>
-    <oc:fileid />
-  </d:prop>
-</d:propfind>';
+				<d:propfind  xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns">
+ 					<d:prop>
+    					<oc:fileid />
+  					</d:prop>
+				</d:propfind>';
 		$response = self::makeDavRequest(
 			$baseUrl,
 			$user,
@@ -76,7 +82,8 @@ class WebDavHelper {
 			$path,
 			null,
 			$xRequestId,
-			$body
+			$body,
+			$davPathVersionToUse
 		);
 		\preg_match(
 			'/\<oc:fileid\>([^\<]*)\<\/oc:fileid\>/',
@@ -123,7 +130,7 @@ class WebDavHelper {
 		?string $xRequestId = '',
 		?string $folderDepth = '0',
 		?string $type = "files",
-		?int $davPathVersionToUse = 2
+		?int $davPathVersionToUse = self::DAV_VERSION_NEW
 	):ResponseInterface {
 		$propertyBody = "";
 		$extraNamespaces = "";
@@ -200,7 +207,7 @@ class WebDavHelper {
 		?string $propertyValue,
 		?string $xRequestId = '',
 		?string $namespaceString = "oc='http://owncloud.org/ns'",
-		?int $davPathVersionToUse = 2,
+		?int $davPathVersionToUse = self::DAV_VERSION_NEW,
 		?string $type="files"
 	):ResponseInterface {
 		$matches = [];
@@ -274,11 +281,12 @@ class WebDavHelper {
 	 * @param string $path
 	 * @param array|null $propertiesArray
 	 * @param string|null $xRequestId
+	 * @param int|null $davPathVersion
 	 * @param string|null $namespaceString
-	 * @param int|null $davPathVersionToUse
 	 * @param string|null $type
 	 *
 	 * @return ResponseInterface
+	 * @throws GuzzleException
 	 */
 	public static function proppatchWithMultipleProps(
 		?string  $baseUrl,
@@ -287,8 +295,8 @@ class WebDavHelper {
 		string  $path,
 		?array $propertiesArray,
 		?string $xRequestId = '',
+		?int  $davPathVersion = null,
 		?string  $namespaceString = "oc='http://owncloud.org/ns'",
-		?int     $davPathVersionToUse = 2,
 		?string  $type="files"
 	):ResponseInterface {
 		$propertyBody = "";
@@ -320,7 +328,7 @@ class WebDavHelper {
 			[],
 			$xRequestId,
 			$body,
-			$davPathVersionToUse,
+			$davPathVersion,
 			$type
 		);
 	}
@@ -349,7 +357,7 @@ class WebDavHelper {
 		?string $xRequestId = '',
 		?array $properties = null,
 		?string $type = "files",
-		?int $davPathVersionToUse = 2
+		?int $davPathVersionToUse = self::DAV_VERSION_NEW
 	):ResponseInterface {
 		if (!$properties) {
 			$properties = [
@@ -385,8 +393,9 @@ class WebDavHelper {
 		if (\array_key_exists($user, self::$spacesIdRef) && \array_key_exists("personal", self::$spacesIdRef[$user])) {
 			return self::$spacesIdRef[$user]["personal"];
 		}
-		$drivesPath = 'graph/v1.0/me/drives';
-		$fullUrl = $baseUrl . $drivesPath;
+		$trimmedBaseUrl = \trim($baseUrl, "/");
+		$drivesPath = '/graph/v1.0/me/drives';
+		$fullUrl = $trimmedBaseUrl . $drivesPath;
 		$response = HttpRequestHelper::get(
 			$fullUrl,
 			$xRequestId,
@@ -396,19 +405,81 @@ class WebDavHelper {
 		$bodyContents = $response->getBody()->getContents();
 		$json = \json_decode($bodyContents);
 		$personalSpaceId = '';
-		foreach ($json->value as $spaces) {
-			if ($spaces->driveType === "personal") {
-				$personalSpaceId = $spaces->id;
-				break;
+		if ($json === null) {
+			// the graph endpoint did not give a useful answer
+			// try getting the information from the webdav endpoint
+			$fullUrl = $trimmedBaseUrl . '/remote.php/webdav';
+			$response = HttpRequestHelper::sendRequest(
+				$fullUrl,
+				$xRequestId,
+				'PROPFIND',
+				$user,
+				$password
+			);
+			// we expect to get a multipart XML response with status 207
+			$status = $response->getStatusCode();
+			if ($status !== 207) {
+				throw new Exception(
+					__METHOD__ . " webdav propfind for user $user failed with status $status - so the personal space id cannot be discovered"
+				);
+			}
+			$responseXmlObject = HttpRequestHelper::getResponseXml(
+				$response,
+				__METHOD__
+			);
+			$xmlPart = $responseXmlObject->xpath("/d:multistatus/d:response[1]/d:propstat/d:prop/oc:id");
+			if ($xmlPart === false) {
+				throw new Exception(
+					__METHOD__ . " oc:id not found in webdav propfind for user $user - so the personal space id cannot be discovered"
+				);
+			}
+			$ocIdRawString = $xmlPart[0]->__toString();
+			$separator = "!";
+			if (\strpos($ocIdRawString, $separator) !== false) {
+				// The string is not base64-encoded, because the exclamation mark is not in the base64 alphabet.
+				// We expect to have a string with 2 parts separated by the exclamation mark.
+				// This is the format introduced in 2022-02
+				// oc:id should be something like:
+				// "7464caf6-1799-103c-9046-c7b74deb5f63!7464caf6-1799-103c-9046-c7b74deb5f63"
+				// There is no encoding to decode.
+				$decodedId = $ocIdRawString;
+			} else {
+				// fall-back to assuming that the oc:id is base64-encoded
+				// That is the format used before and up to 2022-02
+				// This can be removed after both the edge and master branches of cs3org/reva are using the new format.
+				// oc:id should be some base64 encoded string like:
+				// "NzQ2NGNhZjYtMTc5OS0xMDNjLTkwNDYtYzdiNzRkZWI1ZjYzOjc0NjRjYWY2LTE3OTktMTAzYy05MDQ2LWM3Yjc0ZGViNWY2Mw=="
+				// That should decode to something like:
+				// "7464caf6-1799-103c-9046-c7b74deb5f63:7464caf6-1799-103c-9046-c7b74deb5f63"
+				$decodedId = base64_decode($ocIdRawString);
+				$separator = ":";
+			}
+			$ocIdParts = \explode($separator, $decodedId);
+			if (\count($ocIdParts) !== 2) {
+				throw new Exception(
+					__METHOD__ . " the oc:id $decodedId for user $user does not have 2 parts separated by '$separator', so the personal space id cannot be discovered"
+				);
+			}
+			$personalSpaceId = $ocIdParts[0];
+		} else {
+			foreach ($json->value as $spaces) {
+				if ($spaces->driveType === "personal") {
+					$personalSpaceId = $spaces->id;
+					break;
+				}
 			}
 		}
-
 		if ($personalSpaceId) {
+			// If env var LOG_PERSONAL_SPACE_ID is defined, then output the details of the personal space id.
+			// This is a useful debugging tool to have confidence that the personal space id is found correctly.
+			if (\getenv('LOG_PERSONAL_SPACE_ID') !== false) {
+				echo __METHOD__ . " personal space id of user $user is $personalSpaceId\n";
+			}
 			self::$spacesIdRef[$user] = [];
 			self::$spacesIdRef[$user]["personal"] = $personalSpaceId;
 			return $personalSpaceId;
 		}
-		throw new Exception("Personal space not found for user " . $user);
+		throw new Exception(__METHOD__ . " Personal space not found for user " . $user);
 	}
 
 	/**
@@ -448,7 +519,7 @@ class WebDavHelper {
 		?array $headers,
 		?string $xRequestId = '',
 		$body = null,
-		?int $davPathVersionToUse = 1,
+		?int $davPathVersionToUse = self::DAV_VERSION_OLD,
 		?string $type = "files",
 		?string $sourceIpAddress = null,
 		?string $authType = "basic",
@@ -460,18 +531,16 @@ class WebDavHelper {
 	):ResponseInterface {
 		$baseUrl = self::sanitizeUrl($baseUrl, true);
 
-		$usingSpacesDavPath = false;
 		$spaceId = null;
 		// get space id if testing with spaces dav
-		if ($davPathVersionToUse === 3) {
-			$usingSpacesDavPath = true;
+		if ($davPathVersionToUse === self::DAV_VERSION_SPACES) {
 			$spaceId = self::getPersonalSpaceIdForUser($baseUrl, $user, $password, $xRequestId);
 		}
 
 		if ($doDavRequestAsUser === null) {
-			$davPath = self::getDavPath($user, $davPathVersionToUse, $type, $usingSpacesDavPath, $spaceId);
+			$davPath = self::getDavPath($user, $davPathVersionToUse, $type, $spaceId);
 		} else {
-			$davPath = self::getDavPath($doDavRequestAsUser, $davPathVersionToUse, $type, $usingSpacesDavPath, $spaceId);
+			$davPath = self::getDavPath($doDavRequestAsUser, $davPathVersionToUse, $type, $spaceId);
 		}
 
 		//replace %, # and ? and in the path, Guzzle will not encode them
@@ -536,7 +605,6 @@ class WebDavHelper {
 	 * @param string|null $user
 	 * @param int|null $davPathVersionToUse (1|2)
 	 * @param string|null $type
-	 * @param bool $usingSpaces
 	 * @param string|null $spaceId
 	 *
 	 * @return string
@@ -545,7 +613,6 @@ class WebDavHelper {
 		?string $user,
 		?int $davPathVersionToUse = null,
 		?string $type = "files",
-		?bool $usingSpaces = false,
 		?string $spaceId = null
 	):string {
 		if ($type === "public-files" || $type === "public-files-old") {
@@ -560,13 +627,18 @@ class WebDavHelper {
 		if ($type === "customgroups") {
 			return "remote.php/dav/";
 		}
-		if ($usingSpaces) {
+		if ($davPathVersionToUse === self::DAV_VERSION_SPACES) {
+			if (($spaceId === null) || (\strlen($spaceId) === 0)) {
+				throw new InvalidArgumentException(
+					__METHOD__ . " A spaceId must be passed when using DAV path version 3 (spaces)"
+				);
+			}
 			return "dav/spaces/" . $spaceId . '/';
 		} else {
-			if ($davPathVersionToUse === 1) {
+			if ($davPathVersionToUse === self::DAV_VERSION_OLD) {
 				$path = "remote.php/webdav/";
 				return $path;
-			} elseif ($davPathVersionToUse === 2) {
+			} elseif ($davPathVersionToUse === self::DAV_VERSION_NEW) {
 				if ($type === "files") {
 					$path = 'remote.php/dav/files/';
 					return $path . $user . '/';
@@ -617,6 +689,10 @@ class WebDavHelper {
 		$davPathVersion,
 		$chunkingVersion
 	): bool {
+		if ($davPathVersion === self::DAV_VERSION_SPACES) {
+			// allow only old chunking version when using the spaces dav
+			return $chunkingVersion === 1;
+		}
 		return (
 			($chunkingVersion === 'no' || $chunkingVersion === null) ||
 			($davPathVersion === $chunkingVersion)
@@ -640,7 +716,7 @@ class WebDavHelper {
 		?string $fileName,
 		?string $token,
 		?string $xRequestId = '',
-		?int $davVersionToUse = 2
+		?int $davVersionToUse = self::DAV_VERSION_NEW
 	):string {
 		$response = self::propfind(
 			$baseUrl,
@@ -670,6 +746,7 @@ class WebDavHelper {
 	 * @param string|null $baseUrl
 	 * @param string|null $resource
 	 * @param string|null $xRequestId
+	 * @param int|null $davPathVersionToUse
 	 *
 	 * @return string
 	 * @throws Exception
@@ -679,7 +756,8 @@ class WebDavHelper {
 		?string $password,
 		?string $baseUrl,
 		?string $resource,
-		?string $xRequestId = ''
+		?string $xRequestId = '',
+		?int $davPathVersionToUse = self::DAV_VERSION_NEW
 	):string {
 		$response = self::propfind(
 			$baseUrl,
@@ -687,13 +765,21 @@ class WebDavHelper {
 			$password,
 			$resource,
 			["getlastmodified"],
-			$xRequestId
+			$xRequestId,
+			"0",
+			"files",
+			$davPathVersionToUse
 		);
 		$responseXmlObject = HttpRequestHelper::getResponseXml(
 			$response,
 			__METHOD__
 		);
 		$xmlpart = $responseXmlObject->xpath("//d:getlastmodified");
+		Assert::assertArrayHasKey(
+			0,
+			$xmlpart,
+			__METHOD__ . " XML part does not have key 0. Expected a value at index 0 of 'xmlPart' but, found: " . (string) json_encode($xmlpart)
+		);
 		$mtime = new DateTime($xmlpart[0]->__toString());
 		return $mtime->format('U');
 	}

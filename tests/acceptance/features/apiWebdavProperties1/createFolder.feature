@@ -12,24 +12,35 @@ Feature: create folder
   Scenario Outline: create a folder
     Given using <dav_version> DAV path
     When user "Alice" creates folder "<folder_name>" using the WebDAV API
-    Then as "Alice" folder "<folder_name>" should exist
+    Then the HTTP status code should be "201"
+    And as "Alice" folder "<folder_name>" should exist
     Examples:
       | dav_version | folder_name     |
       | old         | /upload         |
       | old         | /strängé folder |
       | old         | /C++ folder.cpp |
-      | old         | /नेपाली         |
+      | old         | /नेपाली           |
       | old         | /folder #2      |
       | old         | /folder ?2      |
       | old         | /😀 🤖          |
       | new         | /upload         |
       | new         | /strängé folder |
       | new         | /C++ folder.cpp |
-      | new         | /नेपाली         |
+      | new         | /नेपाली           |
       | new         | /folder #2      |
       | new         | /folder ?2      |
       | new         | /😀 🤖          |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version | folder_name |
+      | spaces      | /upload         |
+      | spaces      | /strängé folder |
+      | spaces      | /C++ folder.cpp |
+      | spaces      | /नेपाली           |
+      | spaces      | /folder #2      |
+      | spaces      | /folder ?2      |
+      | spaces      | /😀 🤖          |
 
   @smokeTest
   Scenario Outline: Creating a folder
@@ -38,11 +49,18 @@ Feature: create folder
     When user "Alice" gets the following properties of folder "/test_folder" using the WebDAV API
       | propertyName   |
       | d:resourcetype |
-    Then the single response should contain a property "d:resourcetype" with a child property "d:collection"
+    Then the HTTP status code should be "201"
+    And the single response should contain a property "d:resourcetype" with a child property "d:collection"
     Examples:
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
 
   Scenario Outline: Creating a folder with special chars
     Given using <dav_version> DAV path
@@ -50,11 +68,17 @@ Feature: create folder
     When user "Alice" gets the following properties of folder "/test_folder:5" using the WebDAV API
       | propertyName   |
       | d:resourcetype |
-    Then the single response should contain a property "d:resourcetype" with a child property "d:collection"
+    Then the HTTP status code should be "201"
+    And the single response should contain a property "d:resourcetype" with a child property "d:collection"
     Examples:
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @issue-ocis-reva-15
   Scenario Outline: Creating a directory which contains .part should not be possible
@@ -71,6 +95,11 @@ Feature: create folder
       | old         |
       | new         |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
   @issue-ocis-reva-168
   Scenario Outline: try to create a folder that already exists
     Given using <dav_version> DAV path
@@ -85,6 +114,11 @@ Feature: create folder
       | old         |
       | new         |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
   @issue-ocis-reva-168
   Scenario Outline: try to create a folder with a name of an existing file
     Given using <dav_version> DAV path
@@ -98,3 +132,8 @@ Feature: create folder
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |

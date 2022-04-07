@@ -120,7 +120,6 @@ class WebDavPropertiesContext implements Context {
 		$depth = '0';
 		if (\count($properties) > 1) {
 			$depth = 'infinity';
-			$this->featureContext->usingNewDavPath();
 		}
 		$this->featureContext->setResponseXmlObject(
 			$this->featureContext->listFolderAndReturnResponseXml(
@@ -130,6 +129,7 @@ class WebDavPropertiesContext implements Context {
 				$properties
 			)
 		);
+		$this->featureContext->pushToLastStatusCodesArrays();
 	}
 
 	/**
@@ -247,7 +247,8 @@ class WebDavPropertiesContext implements Context {
 				$this->featureContext->getPasswordForUser($username),
 				$path,
 				$properties,
-				$this->featureContext->getStepLineRef()
+				$this->featureContext->getStepLineRef(),
+				$this->featureContext->getDavPathVersion()
 			)
 		);
 		$this->featureContext->theHTTPStatusCodeShouldBeSuccess();
@@ -281,7 +282,10 @@ class WebDavPropertiesContext implements Context {
 				$this->featureContext->getUserPassword($user),
 				$path,
 				$properties,
-				$this->featureContext->getStepLineRef()
+				$this->featureContext->getStepLineRef(),
+				"0",
+				"files",
+				$this->featureContext->getDavPathVersion()
 			)
 		);
 	}
@@ -309,7 +313,7 @@ class WebDavPropertiesContext implements Context {
 				$path,
 				'0',
 				$properties,
-				"public-files"
+				$this->featureContext->getDavPathVersion() === 1 ? "public-files" : "public-files-new"
 			)
 		);
 	}
@@ -750,15 +754,37 @@ class WebDavPropertiesContext implements Context {
 	}
 
 	/**
-	 * @Then there should be an entry with href matching :pattern in the response to user :user
+	 * @Then /^as a public the lock discovery property "([^"]*)" of the (?:file|folder|entry) "([^"]*)" should match "([^"]*)"$/
 	 *
+	 * @param string $xpath
+	 * @param string $path
 	 * @param string $pattern
+	 *
+	 * @return void
+	 * @throws Exception
+	 */
+	public function publicGetsThePropertiesOfFolderAndAssertValueOfItemInResponseRegExp(string $xpath, string $path, string $pattern):void {
+		$propertiesTable = new TableNode([['propertyName'],['d:lockdiscovery']]);
+		$this->publicGetsThePropertiesOfFolder($path, $propertiesTable);
+
+		$this->featureContext->theHTTPStatusCodeShouldBe('200');
+		$this->assertValueOfItemInResponseToUserRegExp(
+			$xpath,
+			null,
+			$pattern
+		);
+	}
+
+	/**
+	 * @Then there should be an entry with href containing :expectedHref in the response to user :user
+	 *
+	 * @param string $expectedHref
 	 * @param string $user
 	 *
 	 * @return void
 	 * @throws Exception
 	 */
-	public function assertEntryWithHrefMatchingRegExpInResponseToUser(string $pattern, string $user):void {
+	public function assertEntryWithHrefMatchingRegExpInResponseToUser(string $expectedHref, string $user):void {
 		$resXml = $this->featureContext->getResponseXmlObject();
 		if ($resXml === null) {
 			$resXml = HttpRequestHelper::getResponseXml(
@@ -768,8 +794,8 @@ class WebDavPropertiesContext implements Context {
 		}
 
 		$user = $this->featureContext->getActualUsername($user);
-		$pattern = $this->featureContext->substituteInLineCodes(
-			$pattern,
+		$expectedHref = $this->featureContext->substituteInLineCodes(
+			$expectedHref,
 			$user,
 			['preg_quote' => ['/']]
 		);
@@ -782,11 +808,32 @@ class WebDavPropertiesContext implements Context {
 			// If we have run out of entries in the response, then fail the test
 			Assert::assertTrue(
 				isset($xmlPart[0]),
-				"Cannot find any entry with href matching $pattern in response to $user"
+				"Cannot find any entry having href with value $expectedHref in response to $user"
 			);
 			$value = $xmlPart[0]->__toString();
-			if (\preg_match($pattern, $value) === 1) {
-				break;
+			$decodedValue = \rawurldecode($value);
+			// for folders, decoded value will be like: "/owncloud/core/remote.php/webdav/strängé folder/"
+			// expected href should be like: "remote.php/webdav/strängé folder/"
+			// for files, decoded value will be like: "/owncloud/core/remote.php/webdav/strängé folder/file.txt"
+			// expected href should be like: "remote.php/webdav/strängé folder/file.txt"
+			$explodeDecoded = \explode('/', $decodedValue);
+			// get the first item of the expected href.
+			// i.e remote.php from "remote.php/webdav/strängé folder/file.txt"
+			// or dav from "dav/spaces/%spaceid%/C++ file.cpp"
+			$explodeExpected = \explode('/', $expectedHref);
+			$remotePhpIndex = \array_search($explodeExpected[0], $explodeDecoded);
+			if ($remotePhpIndex) {
+				$explodedHrefPartArray = \array_slice($explodeDecoded, $remotePhpIndex);
+				$actualHrefPart = \implode('/', $explodedHrefPartArray);
+				if ($this->featureContext->getDavPathVersion() === WebDavHelper::DAV_VERSION_SPACES) {
+					// for spaces webdav, space id is included in the href
+					// space id from our helper is returned as d8c029e0\-2bc9\-4b9a\-8613\-c727e5417f05
+					// so we've to remove "\" before every "-"
+					$expectedHref = str_replace('\-', '-', $expectedHref);
+				}
+				if ($actualHrefPart === $expectedHref) {
+					break;
+				}
 			}
 		}
 	}
@@ -826,6 +873,33 @@ class WebDavPropertiesContext implements Context {
 			$value,
 			"item \"$xpath\" found with value \"$value\", " .
 			"expected to match regex pattern: \"$pattern\""
+		);
+	}
+
+	/**
+	 * @Then /^as user "([^"]*)" the lock discovery property "([^"]*)" of the (?:file|folder|entry) "([^"]*)" should match "([^"]*)"$/
+	 *
+	 * @param string|null $user
+	 * @param string $xpath
+	 * @param string $path
+	 * @param string $pattern
+	 *
+	 * @return void
+	 * @throws Exception
+	 */
+	public function userGetsPropertiesOfFolderAndAssertValueOfItemInResponseToUserRegExp(string $user, string $xpath, string $path, string $pattern):void {
+		$propertiesTable = new TableNode([['propertyName'],['d:lockdiscovery']]);
+		$this->userGetsPropertiesOfFolder(
+			$user,
+			$path,
+			$propertiesTable
+		);
+
+		$this->featureContext->theHTTPStatusCodeShouldBe('200');
+		$this->assertValueOfItemInResponseToUserRegExp(
+			$xpath,
+			$user,
+			$pattern
 		);
 	}
 
@@ -1031,7 +1105,7 @@ class WebDavPropertiesContext implements Context {
 		if ($storePath == "") {
 			$storePath = $path;
 		}
-		if ($this->storedETAG[$user][$storePath] === null) {
+		if ($this->storedETAG[$user][$storePath] === null || $this->storedETAG[$user][$path] === "") {
 			throw new Exception("Expected stored etag to be some string but found null!");
 		}
 	}
@@ -1051,7 +1125,7 @@ class WebDavPropertiesContext implements Context {
 			$user,
 			$path
 		);
-		if ($this->storedETAG[$user][$path] === null) {
+		if ($this->storedETAG[$user][$path] === "" || $this->storedETAG[$user][$path] === null) {
 			throw new Exception("Expected stored etag to be some string but found null!");
 		}
 	}

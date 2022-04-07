@@ -1,8 +1,37 @@
+ATMOZ_SFTP = "atmoz/sftp"
+DRONE_CLI_ALPINE = "drone/cli:alpine"
+MAILHOG_MAILHOG = "mailhog/mailhog"
+MINIO_MC_RELEASE_2020_VERSION = "minio/mc:RELEASE.2020-12-10T01-26-17Z"
 OC_CI_ALPINE = "owncloudci/alpine:latest"
+OC_CI_BAZEL_BUILDIFIER = "owncloudci/bazel-buildifier"
+OC_CI_CEPH = "owncloudci/ceph:tag-build-master-jewel-ubuntu-16.04"
 OC_CI_CORE_NODEJS = "owncloudci/core:nodejs14"
+OC_CI_DRONE_CANCEL_PREVIOUS_BUILDS = "owncloudci/drone-cancel-previous-builds"
+OC_CI_DRONE_SKIP_PIPELINE = "owncloudci/drone-skip-pipeline"
+OC_CI_NODEJS = "owncloudci/nodejs:%s"
+OC_CI_ORACLE_XE = "owncloudci/oracle-xe:latest"
+OC_CI_PHP = "owncloudci/php:%s"
+OC_CI_SAMBA = "owncloudci/samba:latest"
+OC_CI_SCALITY_S3SERVER = "owncloudci/scality-s3server:latest"
 OC_CI_WAIT_FOR = "owncloudci/wait-for:latest"
-OC_CI_NODEJS = "owncloudci/nodejs:14"
+OC_LITMUS = "owncloud/litmus:latest"
+OC_SERVER = "owncloud/server"
 OC_UBUNTU = "owncloud/ubuntu:20.04"
+OSIXIA_OPENLDAP = "osixia/openldap"
+PLUGINS_GIT_ACTION = "plugins/git-action:1"
+PLUGINS_S3 = "plugins/s3"
+PLUGINS_S3_CACHE = "plugins/s3-cache:1"
+PLUGINS_SLACK = "plugins/slack:1"
+POTTAVA_PROXY = "pottava/proxy"
+SELENIUM_STANDALONE_CHROME_DEBUG = "selenium/standalone-chrome-debug:3.141.59-oxygen"
+SELENIUM_STANDALONE_FIREFOX_DEBUG = "selenium/standalone-firefox-debug:3.8.1"
+SONARSOURCE_SONAR_SCANNER_CLI = "sonarsource/sonar-scanner-cli"
+THEGEEKLAB_DRONE_GITHUB_COMMENT = "thegeeklab/drone-github-comment:1"
+TOOLHIPPIE_CALENS = "toolhippie/calens:latest"
+WEBHIPPIE_REDIS = "webhippie/redis:latest"
+
+DEFAULT_PHP_VERSION = "7.4"
+DEFAULT_NODEJS_VERSION = "14"
 
 dir = {
     "base": "/drone",
@@ -43,7 +72,7 @@ config = {
                 "mysql:5.7",
                 "mysql:8.0",
                 "postgres:9.4",
-                "postgres:10.3",
+                "postgres:10.20",
             ],
         },
         "slowDatabases": {
@@ -60,7 +89,7 @@ config = {
         },
         "reducedDatabases": {
             "phpVersions": [
-                "7.4",
+                DEFAULT_PHP_VERSION,
             ],
             "databases": [
                 "sqlite",
@@ -70,7 +99,7 @@ config = {
         "external-samba-windows": {
             "phpVersions": [
                 "7.3",
-                "7.4",
+                DEFAULT_PHP_VERSION,
             ],
             "databases": [
                 "sqlite",
@@ -90,7 +119,7 @@ config = {
         "external-other": {
             "phpVersions": [
                 "7.3",
-                "7.4",
+                DEFAULT_PHP_VERSION,
             ],
             "databases": [
                 "sqlite",
@@ -161,6 +190,18 @@ config = {
                 "apiWebdavUpload1",
                 "apiWebdavUpload2",
             ],
+            "filterTags": "~@local_storage&&~@files_external-app-required",
+        },
+        "apiFilesExternal": {
+            "suites": {
+                "apiFilesExternal": "apiFilesExt",
+            },
+            "filterTags": "@files_external-app-required",
+            "runAllSuites": True,
+            "numberOfParts": 1,
+            "extraApps": {
+                "files_external": "",
+            },
         },
         "apiNotifications": {
             "suites": [
@@ -189,7 +230,19 @@ config = {
                 "cliProvisioning",
                 "cliTrashbin",
             ],
+            "filterTags": "~@local_storage&&~@files_external-app-required",
             "emailNeeded": True,
+        },
+        "cliFilesExternal": {
+            "suites": {
+                "cliFilesExternal": "cliFilesExt",
+            },
+            "filterTags": "@files_external-app-required",
+            "runAllSuites": True,
+            "numberOfParts": 1,
+            "extraApps": {
+                "files_external": "",
+            },
         },
         "cliAppManagement": {
             "suites": [
@@ -207,8 +260,7 @@ config = {
             "testingRemoteSystem": False,
             "extraSetup": [{
                 "name": "configure-encryption",
-                "image": "owncloudci/php:7.4",
-                "pull": "always",
+                "image": OC_CI_PHP % DEFAULT_PHP_VERSION,
                 "commands": [
                     "php occ maintenance:singleuser --on",
                     "php occ encryption:enable",
@@ -234,7 +286,7 @@ config = {
             "dbServices": [
                 "sqlite",
                 "mysql:8.0",
-                "postgres:10.3",
+                "postgres:10.20",
             ],
         },
         "cliExternalStorage": {
@@ -243,6 +295,9 @@ config = {
             ],
             "federatedServerNeeded": True,
             "federatedServerVersions": ["git", "latest", "10.8.0"],
+            "extraApps": {
+                "files_external": "",
+            },
         },
         "webUI": {
             "suites": {
@@ -276,9 +331,21 @@ config = {
                 "webUIWebdavLockProtection": "webUIWebdavLockProt",
                 "webUIWebdavLocks": "",
             },
+            "filterTags": "~@local_storage&&~@files_external-app-required",
             "emailNeeded": True,
             "useHttps": False,
             "selUserNeeded": True,
+        },
+        "webUIFilesExternal": {
+            "suites": {
+                "webUIFilesExternal": "webUIFilesExt",
+            },
+            "filterTags": "@files_external-app-required",
+            "runAllSuites": True,
+            "numberOfParts": 1,
+            "extraApps": {
+                "files_external": "",
+            },
         },
         "webUINotifications": {
             "suites": {
@@ -358,7 +425,7 @@ config = {
             },
             "proxyNeeded": True,
             "useHttps": False,
-            "filterTags": "@smokeTest&&~@notifications-app-required",
+            "filterTags": "@smokeTest&&~@notifications-app-required&&~@local_storage&&~@files_external-app-required",
             "runAllSuites": True,
             "numberOfParts": 8,
         },
@@ -416,7 +483,7 @@ def initialPipelines(ctx):
     return dependencies(ctx) + checkStarlark()
 
 def beforePipelines(ctx):
-    return codestyle() + changelog(ctx) + checkForRecentBuilds(ctx) + phpstan() + phan()
+    return codestyle(ctx) + changelog(ctx) + cancelPreviousBuilds() + phpstan(ctx) + phan(ctx)
 
 def coveragePipelines(ctx):
     # All unit test pipelines that have coverage or other test analysis reported
@@ -529,14 +596,14 @@ def dependencies(ctx):
 
     return pipelines
 
-def codestyle():
+def codestyle(ctx):
     pipelines = []
 
     if "codestyle" not in config:
         return pipelines
 
     default = {
-        "phpVersions": ["7.4"],
+        "phpVersions": [DEFAULT_PHP_VERSION],
     }
 
     if "defaults" in config:
@@ -573,15 +640,15 @@ def codestyle():
                     "base": dir["base"],
                     "path": "src",
                 },
-                "steps": cacheRestore() +
+                "steps": skipIfUnchanged(ctx, "lint") +
+                         cacheRestore() +
                          composerInstall(phpVersion) +
                          vendorbinCodestyle(phpVersion) +
                          vendorbinCodesniffer(phpVersion) +
                          [
                              {
                                  "name": "php-style",
-                                 "image": "owncloudci/php:%s" % phpVersion,
-                                 "pull": "always",
+                                 "image": OC_CI_PHP % phpVersion,
                                  "commands": [
                                      "make test-php-style",
                                  ],
@@ -617,8 +684,7 @@ def changelog(ctx):
         "steps": [
             {
                 "name": "clone",
-                "image": "plugins/git-action:1",
-                "pull": "always",
+                "image": PLUGINS_GIT_ACTION,
                 "settings": {
                     "actions": [
                         "clone",
@@ -637,8 +703,7 @@ def changelog(ctx):
             },
             {
                 "name": "generate",
-                "image": "toolhippie/calens:latest",
-                "pull": "always",
+                "image": TOOLHIPPIE_CALENS,
                 "commands": [
                     "calens >| CHANGELOG.md",
                     "calens -t changelog/CHANGELOG-html.tmpl >| CHANGELOG.html",
@@ -647,23 +712,20 @@ def changelog(ctx):
             {
                 "name": "diff",
                 "image": OC_CI_ALPINE,
-                "pull": "always",
                 "commands": [
                     "git diff",
                 ],
             },
             {
                 "name": "output",
-                "image": "toolhippie/calens:latest",
-                "pull": "always",
+                "image": TOOLHIPPIE_CALENS,
                 "commands": [
                     "cat CHANGELOG.md",
                 ],
             },
             {
                 "name": "publish",
-                "image": "plugins/git-action:1",
-                "pull": "always",
+                "image": PLUGINS_GIT_ACTION,
                 "settings": {
                     "actions": [
                         "commit",
@@ -703,63 +765,39 @@ def changelog(ctx):
 
     return pipelines
 
-def checkForRecentBuilds(ctx):
-    pipelines = []
-
-    result = {
+def cancelPreviousBuilds():
+    return [{
         "kind": "pipeline",
         "type": "docker",
-        "name": "stop-recent-builds",
-        "workspace": {
-            "base": dir["base"],
-            "path": "src",
+        "name": "cancel-previous-builds",
+        "clone": {
+            "disable": True,
         },
-        "steps": stopRecentBuilds(ctx),
+        "steps": [{
+            "name": "cancel-previous-builds",
+            "image": OC_CI_DRONE_CANCEL_PREVIOUS_BUILDS,
+            "settings": {
+                "DRONE_TOKEN": {
+                    "from_secret": "drone_token",
+                },
+            },
+        }],
         "depends_on": [],
         "trigger": {
             "ref": [
-                "refs/heads/master",
-                "refs/tags/**",
                 "refs/pull/**",
-            ],
-        },
-    }
-
-    pipelines.append(result)
-
-    return pipelines
-
-def stopRecentBuilds(ctx):
-    return [{
-        "name": "stop-recent-builds",
-        "image": "drone/cli:alpine",
-        "pull": "always",
-        "environment": {
-            "DRONE_SERVER": "https://drone.owncloud.com",
-            "DRONE_TOKEN": {
-                "from_secret": "drone_token",
-            },
-        },
-        "commands": [
-            "drone build ls %s --status running > %s/recentBuilds.txt" % (ctx.repo.slug, dir["server"]),
-            "drone build info %s ${DRONE_BUILD_NUMBER} > %s/thisBuildInfo.txt" % (ctx.repo.slug, dir["server"]),
-            "cd %s && ./tests/acceptance/cancelBuilds.sh" % dir["server"],
-        ],
-        "when": {
-            "event": [
-                "pull_request",
             ],
         },
     }]
 
-def phpstan():
+def phpstan(ctx):
     pipelines = []
 
     if "phpstan" not in config:
         return pipelines
 
     default = {
-        "phpVersions": ["7.4"],
+        "phpVersions": [DEFAULT_PHP_VERSION],
         "logLevel": "2",
     }
 
@@ -797,15 +835,16 @@ def phpstan():
                     "base": dir["base"],
                     "path": "src",
                 },
-                "steps": cacheRestore() +
+                "steps": skipIfUnchanged(ctx, "lint") +
+                         cacheRestore() +
                          composerInstall(phpVersion) +
                          vendorbinPhpstan(phpVersion) +
                          installServer(phpVersion, "sqlite", params["logLevel"]) +
+                         enableAppsForPhpStan(phpVersion) +
                          [
                              {
                                  "name": "php-phpstan",
-                                 "image": "owncloudci/php:%s" % phpVersion,
-                                 "pull": "always",
+                                 "image": OC_CI_PHP % phpVersion,
                                  "commands": [
                                      "make test-php-phpstan",
                                  ],
@@ -824,14 +863,14 @@ def phpstan():
 
     return pipelines
 
-def phan():
+def phan(ctx):
     pipelines = []
 
     if "phan" not in config:
         return pipelines
 
     default = {
-        "phpVersions": ["7.3", "7.4"],
+        "phpVersions": ["7.3", DEFAULT_PHP_VERSION],
         "logLevel": "2",
     }
 
@@ -869,15 +908,14 @@ def phan():
                     "base": dir["base"],
                     "path": "src",
                 },
-                "steps": cacheRestore() +
+                "steps": skipIfUnchanged(ctx, "lint") + cacheRestore() +
                          composerInstall(phpVersion) +
                          vendorbinPhan(phpVersion) +
                          installServer(phpVersion, "sqlite", params["logLevel"]) +
                          [
                              {
                                  "name": "phan",
-                                 "image": "owncloudci/php:%s" % phpVersion,
-                                 "pull": "always",
+                                 "image": OC_CI_PHP % phpVersion,
                                  "commands": [
                                      "make test-php-phan",
                                  ],
@@ -903,7 +941,7 @@ def litmus():
         return pipelines
 
     default = {
-        "phpVersions": ["7.3", "7.4"],
+        "phpVersions": ["7.3", DEFAULT_PHP_VERSION],
         "logLevel": "2",
         "useHttps": True,
     }
@@ -934,7 +972,6 @@ def litmus():
         for phpVersion in params["phpVersions"]:
             name = "litmus-php%s" % phpVersion
             db = "mariadb:10.2"
-            image = "owncloud/litmus:latest"
             environment = {
                 "LITMUS_PASSWORD": "admin",
                 "LITMUS_USERNAME": "admin",
@@ -960,8 +997,7 @@ def litmus():
                          [
                              {
                                  "name": "old-endpoint",
-                                 "image": image,
-                                 "pull": "always",
+                                 "image": OC_LITMUS,
                                  "environment": environment,
                                  "commands": [
                                      "source .env",
@@ -971,8 +1007,7 @@ def litmus():
                              },
                              {
                                  "name": "new-endpoint",
-                                 "image": image,
-                                 "pull": "always",
+                                 "image": OC_LITMUS,
                                  "environment": environment,
                                  "commands": [
                                      "source .env",
@@ -982,8 +1017,7 @@ def litmus():
                              },
                              {
                                  "name": "new-mount",
-                                 "image": image,
-                                 "pull": "always",
+                                 "image": OC_LITMUS,
                                  "environment": environment,
                                  "commands": [
                                      "source .env",
@@ -993,8 +1027,7 @@ def litmus():
                              },
                              {
                                  "name": "old-mount",
-                                 "image": image,
-                                 "pull": "always",
+                                 "image": OC_LITMUS,
                                  "environment": environment,
                                  "commands": [
                                      "source .env",
@@ -1004,8 +1037,7 @@ def litmus():
                              },
                              {
                                  "name": "new-shared",
-                                 "image": image,
-                                 "pull": "always",
+                                 "image": OC_LITMUS,
                                  "environment": environment,
                                  "commands": [
                                      "source .env",
@@ -1015,8 +1047,7 @@ def litmus():
                              },
                              {
                                  "name": "old-shared",
-                                 "image": image,
-                                 "pull": "always",
+                                 "image": OC_LITMUS,
                                  "environment": environment,
                                  "commands": [
                                      "source .env",
@@ -1026,8 +1057,7 @@ def litmus():
                              },
                              {
                                  "name": "public-share",
-                                 "image": image,
-                                 "pull": "always",
+                                 "image": OC_LITMUS,
                                  "environment": {
                                      "LITMUS_PASSWORD": "admin",
                                      "LITMUS_USERNAME": "admin",
@@ -1062,7 +1092,7 @@ def dav():
         return pipelines
 
     default = {
-        "phpVersions": ["7.3", "7.4"],
+        "phpVersions": ["7.3", DEFAULT_PHP_VERSION],
         "logLevel": "2",
     }
 
@@ -1123,8 +1153,7 @@ def dav():
                              [
                                  {
                                      "name": "dav-test",
-                                     "image": "owncloudci/php:%s" % phpVersion,
-                                     "pull": "always",
+                                     "image": OC_CI_PHP % phpVersion,
                                      "commands": [
                                          "bash %s/script.sh" % scriptPath,
                                      ],
@@ -1193,13 +1222,12 @@ def javascript(ctx, withCoverage):
             "base": dir["base"],
             "path": "src",
         },
-        "steps": cacheRestore() +
+        "steps": skipIfUnchanged(ctx, "unit-tests") + cacheRestore() +
                  yarnInstall() +
                  [
                      {
                          "name": "test-js",
-                         "image": OC_CI_NODEJS,
-                         "pull": "always",
+                         "image": OC_CI_NODEJS % DEFAULT_NODEJS_VERSION,
                          "commands": [
                              "make test-js",
                          ],
@@ -1218,8 +1246,7 @@ def javascript(ctx, withCoverage):
         result["steps"].append(
             {
                 "name": "coverage-cache",
-                "image": "plugins/s3",
-                "pull": "always",
+                "image": PLUGINS_S3,
                 "settings": {
                     "endpoint": {
                         "from_secret": "cache_s3_endpoint",
@@ -1252,8 +1279,10 @@ def phpTests(ctx, testType, withCoverage):
 
     errorFound = False
 
-    default = {
-        "phpVersions": ["7.3", "7.4"],
+    # The default PHP unit test settings for a PR.
+    # Note: do not run Oracle by default in PRs.
+    prDefault = {
+        "phpVersions": ["7.3", DEFAULT_PHP_VERSION],
         "databases": [
             "sqlite",
             "mariadb:10.2",
@@ -1265,7 +1294,37 @@ def phpTests(ctx, testType, withCoverage):
             "mysql:5.7",
             "mysql:8.0",
             "postgres:9.4",
-            "postgres:10.3",
+            "postgres:10.20",
+        ],
+        "coverage": True,
+        "includeKeyInMatrixName": False,
+        "logLevel": "2",
+        "cephS3": False,
+        "scalityS3": False,
+        "externalTypes": ["none"],
+        "extraSetup": [],
+        "extraServices": [],
+        "extraEnvironment": {},
+        "extraCommandsBeforeTestRun": [],
+        "extraApps": {},
+        "skip": False,
+    }
+
+    # The default PHP unit test settings for the cron job (usually runs nightly).
+    cronDefault = {
+        "phpVersions": ["7.3", DEFAULT_PHP_VERSION],
+        "databases": [
+            "sqlite",
+            "mariadb:10.2",
+            "mariadb:10.3",
+            "mariadb:10.4",
+            "mariadb:10.5",
+            "mariadb:10.6",
+            "mysql:5.5",
+            "mysql:5.7",
+            "mysql:8.0",
+            "postgres:9.4",
+            "postgres:10.20",
             "oracle",
         ],
         "coverage": True,
@@ -1281,6 +1340,10 @@ def phpTests(ctx, testType, withCoverage):
         "extraApps": {},
         "skip": False,
     }
+    if (ctx.build.event == "cron"):
+        default = cronDefault
+    else:
+        default = prDefault
 
     if "defaults" in config:
         if testType in config["defaults"]:
@@ -1382,7 +1445,8 @@ def phpTests(ctx, testType, withCoverage):
                             "base": dir["base"],
                             "path": "src",
                         },
-                        "steps": cacheRestore() +
+                        "steps": skipIfUnchanged(ctx, "unit-tests") +
+                                 cacheRestore() +
                                  composerInstall(phpVersion) +
                                  installServer(phpVersion, db, params["logLevel"]) +
                                  installExtraApps(phpVersion, extraAppsDict, dir["server"]) +
@@ -1393,8 +1457,7 @@ def phpTests(ctx, testType, withCoverage):
                                  [
                                      {
                                          "name": "%s-tests" % testType,
-                                         "image": "owncloudci/php:%s" % phpVersion,
-                                         "pull": "always",
+                                         "image": OC_CI_PHP % phpVersion,
                                          "environment": {
                                              "COVERAGE": params["coverage"],
                                              "DB_TYPE": getDbName(db),
@@ -1428,16 +1491,14 @@ def phpTests(ctx, testType, withCoverage):
                     if params["coverage"] and not needScality:
                         result["steps"].append({
                             "name": "coverage-rename",
-                            "image": "owncloudci/php:%s" % phpVersion,
-                            "pull": "always",
+                            "image": OC_CI_PHP % phpVersion,
                             "commands": [
                                 "mv tests/output/coverage/%s-clover-%s.xml tests/output/coverage/clover-%s.xml" % (coverageFileNameStart, getDbName(db), name),
                             ] + extraCoverageRenameCommand,
                         })
                         result["steps"].append({
                             "name": "coverage-cache-1",
-                            "image": "plugins/s3",
-                            "pull": "always",
+                            "image": PLUGINS_S3,
                             "settings": {
                                 "endpoint": {
                                     "from_secret": "cache_s3_endpoint",
@@ -1458,8 +1519,7 @@ def phpTests(ctx, testType, withCoverage):
                         if extraCoverage:
                             result["steps"].append({
                                 "name": "coverage-cache-2",
-                                "image": "plugins/s3",
-                                "pull": "always",
+                                "image": PLUGINS_S3,
                                 "settings": {
                                     "endpoint": {
                                         "from_secret": "cache_s3_endpoint",
@@ -1503,9 +1563,9 @@ def acceptance(ctx):
     default = {
         "federatedServerVersions": [""],
         "browsers": ["chrome"],
-        "phpVersions": ["7.4"],
+        "phpVersions": [DEFAULT_PHP_VERSION],
         "databases": ["mariadb:10.2"],
-        "federatedPhpVersion": "7.4",
+        "federatedPhpVersion": DEFAULT_PHP_VERSION,
         "federatedServerNeeded": False,
         "federatedDb": "",
         "filterTags": "",
@@ -1707,7 +1767,8 @@ def acceptance(ctx):
                                         "base": dir["base"],
                                         "path": "src",
                                     },
-                                    "steps": cacheRestore() +
+                                    "steps": skipIfUnchanged(ctx, "acceptance-tests") +
+                                             cacheRestore() +
                                              composerInstall(phpVersion) +
                                              vendorbinBehat() +
                                              yarnInstall() +
@@ -1732,8 +1793,7 @@ def acceptance(ctx):
                                              [
                                                  ({
                                                      "name": "acceptance-tests",
-                                                     "image": "owncloudci/php:%s" % phpVersion,
-                                                     "pull": "always",
+                                                     "image": OC_CI_PHP % phpVersion,
                                                      "environment": environment,
                                                      "commands": params["extraCommandsBeforeTestRun"] + [
                                                          "touch %s/saved-settings.sh" % dir["base"],
@@ -1745,7 +1805,7 @@ def acceptance(ctx):
                                                          "path": "%s/downloads" % dir["server"],
                                                      }],
                                                  }),
-                                             ] + buildGithubCommentForBuildStopped(name, params["earlyFail"]) + githubComment(params["earlyFail"]) + stopBuild(params["earlyFail"]),
+                                             ] + githubComment(params["earlyFail"]) + stopBuild(params["earlyFail"]),
                                     "services": dbServices +
                                                 browserService(browser) +
                                                 emailService(params["emailNeeded"]) +
@@ -1779,7 +1839,7 @@ def acceptance(ctx):
 
     return pipelines
 
-def sonarAnalysis(ctx, phpVersion = "7.4"):
+def sonarAnalysis(ctx, phpVersion = DEFAULT_PHP_VERSION):
     sonar_env = {
         "SONAR_TOKEN": {
             "from_secret": "sonar_token",
@@ -1817,6 +1877,7 @@ def sonarAnalysis(ctx, phpVersion = "7.4"):
                          ],
                      },
                  ] +
+                 skipIfUnchanged(ctx, "unit-tests") +
                  cacheRestore() +
                  composerInstall(phpVersion) +
                  yarnInstall() +
@@ -1824,8 +1885,7 @@ def sonarAnalysis(ctx, phpVersion = "7.4"):
                  [
                      {
                          "name": "sync-from-cache",
-                         "image": "minio/mc:RELEASE.2020-12-10T01-26-17Z",
-                         "pull": "always",
+                         "image": MINIO_MC_RELEASE_2020_VERSION,
                          "environment": {
                              "MC_HOST_cache": {
                                  "from_secret": "cache_s3_connection_url",
@@ -1838,8 +1898,7 @@ def sonarAnalysis(ctx, phpVersion = "7.4"):
                      },
                      {
                          "name": "setup-before-sonarcloud",
-                         "image": "owncloudci/php:%s" % phpVersion,
-                         "pull": "always",
+                         "image": OC_CI_PHP % phpVersion,
                          "commands": [
                              "pwd",
                              "ls -l",
@@ -1855,13 +1914,12 @@ def sonarAnalysis(ctx, phpVersion = "7.4"):
                      },
                      {
                          "name": "sonarcloud",
-                         "image": "sonarsource/sonar-scanner-cli",
-                         "pull": "always",
+                         "image": SONARSOURCE_SONAR_SCANNER_CLI,
                          "environment": sonar_env,
                      },
                      {
                          "name": "purge-cache",
-                         "image": "minio/mc:RELEASE.2020-12-10T01-26-17Z",
+                         "image": MINIO_MC_RELEASE_2020_VERSION,
                          "environment": {
                              "MC_HOST_cache": {
                                  "from_secret": "cache_s3_connection_url",
@@ -1898,8 +1956,7 @@ def notify():
         "steps": [
             {
                 "name": "notify-rocketchat",
-                "image": "plugins/slack:1",
-                "pull": "always",
+                "image": PLUGINS_SLACK,
                 "settings": {
                     "webhook": {
                         "from_secret": config["rocketchat"]["from_secret"],
@@ -1929,8 +1986,7 @@ def stopBuild(earlyFail):
     if (earlyFail):
         return [{
             "name": "stop-build",
-            "image": "drone/cli:alpine",
-            "pull": "always",
+            "image": DRONE_CLI_ALPINE,
             "environment": {
                 "DRONE_SERVER": "https://drone.owncloud.com",
                 "DRONE_TOKEN": {
@@ -1953,39 +2009,17 @@ def stopBuild(earlyFail):
     else:
         return []
 
-def buildGithubCommentForBuildStopped(alternateSuiteName, earlyFail):
-    if (earlyFail):
-        return [{
-            "name": "build-github-comment-buildStop",
-            "image": OC_UBUNTU,
-            "pull": "always",
-            "commands": [
-                'echo ":boom: Acceptance tests pipeline <strong>%s</strong> failed. The build has been cancelled.\\n\\n${DRONE_BUILD_LINK}/${DRONE_JOB_NUMBER}${DRONE_STAGE_NUMBER}/1\\n" >> %s/comments.file' % (alternateSuiteName, dir["server"]),
-            ],
-            "when": {
-                "status": [
-                    "failure",
-                ],
-                "event": [
-                    "pull_request",
-                ],
-            },
-        }]
-
-    else:
-        return []
-
 def githubComment(earlyFail):
     if (earlyFail):
         return [{
             "name": "github-comment",
-            "image": "jmccann/drone-github-comment:1",
+            "image": THEGEEKLAB_DRONE_GITHUB_COMMENT,
             "pull": "if-not-exists",
             "settings": {
-                "message_file": "%s/comments.file" % dir["server"],
-            },
-            "environment": {
-                "GITHUB_TOKEN": {
+                "message": ":boom: Acceptance tests pipeline <strong>${DRONE_STAGE_NAME}</strong> failed. The build has been cancelled.\\n\\n${DRONE_BUILD_LINK}/${DRONE_JOB_NUMBER}${DRONE_STAGE_NUMBER}",
+                "key": "pr-${DRONE_PULL_REQUEST}",
+                "update": "true",
+                "api_key": {
                     "from_secret": "github_token",
                 },
             },
@@ -2008,7 +2042,6 @@ def databaseService(db):
         service = {
             "name": dbName,
             "image": db,
-            "pull": "always",
             "environment": {
                 "MYSQL_USER": getDbUsername(db),
                 "MYSQL_PASSWORD": getDbPassword(db),
@@ -2024,7 +2057,6 @@ def databaseService(db):
         return [{
             "name": dbName,
             "image": db,
-            "pull": "always",
             "environment": {
                 "POSTGRES_USER": getDbUsername(db),
                 "POSTGRES_PASSWORD": getDbPassword(db),
@@ -2035,8 +2067,7 @@ def databaseService(db):
     if dbName == "oracle":
         return [{
             "name": dbName,
-            "image": "owncloudci/oracle-xe:latest",
-            "pull": "always",
+            "image": OC_CI_ORACLE_XE,
             "environment": {
                 "ORACLE_USER": getDbUsername(db),
                 "ORACLE_PASSWORD": getDbPassword(db),
@@ -2051,8 +2082,7 @@ def browserService(browser):
     if browser == "chrome":
         return [{
             "name": "selenium",
-            "image": "selenium/standalone-chrome-debug:3.141.59-oxygen",
-            "pull": "always",
+            "image": SELENIUM_STANDALONE_CHROME_DEBUG,
             "environment": {
                 "JAVA_OPTS": "-Dselenium.LOGGER.level=WARNING",
             },
@@ -2065,8 +2095,7 @@ def browserService(browser):
     if browser == "firefox":
         return [{
             "name": "selenium",
-            "image": "selenium/standalone-firefox-debug:3.8.1",
-            "pull": "always",
+            "image": SELENIUM_STANDALONE_FIREFOX_DEBUG,
             "environment": {
                 "JAVA_OPTS": "-Dselenium.LOGGER.level=WARNING",
                 "SE_OPTS": "-enablePassThrough false",
@@ -2095,8 +2124,7 @@ def emailService(emailNeeded):
     if emailNeeded:
         return [{
             "name": "email",
-            "image": "mailhog/mailhog",
-            "pull": "always",
+            "image": MAILHOG_MAILHOG,
         }]
 
     return []
@@ -2117,8 +2145,7 @@ def ldapService(ldapNeeded):
     if ldapNeeded:
         return [{
             "name": "ldap",
-            "image": "osixia/openldap",
-            "pull": "always",
+            "image": OSIXIA_OPENLDAP,
             "environment": {
                 "LDAP_DOMAIN": "owncloud.com",
                 "LDAP_ORGANISATION": "owncloud",
@@ -2133,8 +2160,7 @@ def proxyService(proxyNeeded):
     if proxyNeeded:
         return [{
             "name": "proxy",
-            "image": "pottava/proxy",
-            "pull": "always",
+            "image": POTTAVA_PROXY,
             "environment": {
                 "PROXY_URL": "http://server",
             },
@@ -2148,8 +2174,7 @@ def webdavService(needed):
 
     return [{
         "name": "webdav",
-        "image": "owncloudci/php:latest",
-        "pull": "always",
+        "image": OC_CI_PHP % "latest",
         "environment": {
             "APACHE_CONFIG_TEMPLATE": "webdav",
         },
@@ -2166,8 +2191,7 @@ def sambaService(needed):
 
     return [{
         "name": "samba",
-        "image": "owncloudci/samba:latest",
-        "pull": "always",
+        "image": OC_CI_SAMBA,
         "command": [
             "-u",
             "test;test",
@@ -2192,8 +2216,7 @@ def sftpService(needed):
     # docker image can be started "locally".
     return [{
         "name": "sftp",
-        "image": "atmoz/sftp",
-        "pull": "always",
+        "image": ATMOZ_SFTP,
         "environment": {
             "SFTP_USERS": "test:12345:1001::upload",
         },
@@ -2205,8 +2228,7 @@ def scalityService(scalityS3):
 
     return [{
         "name": "scality",
-        "image": "owncloudci/scality-s3server:latest",
-        "pull": "always",
+        "image": OC_CI_SCALITY_S3SERVER,
         "environment": {
             "HOST_NAME": "scality",
         },
@@ -2218,8 +2240,7 @@ def cephService(cephS3):
 
     return [{
         "name": "ceph",
-        "image": "owncloudci/ceph:tag-build-master-jewel-ubuntu-16.04",
-        "pull": "always",
+        "image": OC_CI_CEPH,
         "environment": {
             "NETWORK_AUTO_DETECT": "4",
             "RGW_NAME": "ceph",
@@ -2247,8 +2268,7 @@ def owncloudService(phpVersion, name, pathOfServerUnderTest, ssl):
 
     return [{
         "name": name,
-        "image": "owncloudci/php:%s" % phpVersion,
-        "pull": "always",
+        "image": OC_CI_PHP % phpVersion,
         "environment": environment,
         "command": [
             "/usr/local/bin/apachectl",
@@ -2311,8 +2331,7 @@ def getDbType(db):
 def cacheRestore():
     return [{
         "name": "cache-restore",
-        "image": "plugins/s3-cache:1",
-        "pull": "always",
+        "image": PLUGINS_S3_CACHE,
         "settings": {
             "access_key": {
                 "from_secret": "cache_s3_access_key",
@@ -2336,8 +2355,7 @@ def cacheRestore():
 def cacheClearOnEventPush(phpVersion):
     return [{
         "name": "cache-clear",
-        "image": "owncloudci/php:%s" % phpVersion,
-        "pull": "always",
+        "image": OC_CI_PHP % phpVersion,
         "commands": [
             "rm -Rf %s/.cache/composer" % dir["server"],
             "rm -Rf %s/.cache/yarn" % dir["server"],
@@ -2356,8 +2374,7 @@ def cacheClearOnEventPush(phpVersion):
 def cacheRebuildOnEventPush():
     return [{
         "name": "cache-rebuild",
-        "image": "plugins/s3-cache:1",
-        "pull": "always",
+        "image": PLUGINS_S3_CACHE,
         "settings": {
             "access_key": {
                 "from_secret": "cache_s3_access_key",
@@ -2387,8 +2404,7 @@ def cacheRebuildOnEventPush():
 def cacheFlushOnEventPush():
     return [{
         "name": "cache-flush",
-        "image": "plugins/s3-cache:1",
-        "pull": "always",
+        "image": PLUGINS_S3_CACHE,
         "settings": {
             "access_key": {
                 "from_secret": "cache_s3_access_key",
@@ -2416,8 +2432,7 @@ def cacheFlushOnEventPush():
 def composerInstall(phpVersion):
     return [{
         "name": "composer-install",
-        "image": "owncloudci/php:%s" % phpVersion,
-        "pull": "always",
+        "image": OC_CI_PHP % phpVersion,
         "environment": {
             "COMPOSER_HOME": "%s/.cache/composer" % dir["server"],
         },
@@ -2429,8 +2444,7 @@ def composerInstall(phpVersion):
 def vendorbinCodestyle(phpVersion):
     return [{
         "name": "vendorbin-codestyle",
-        "image": "owncloudci/php:%s" % phpVersion,
-        "pull": "always",
+        "image": OC_CI_PHP % phpVersion,
         "environment": {
             "COMPOSER_HOME": "%s/.cache/composer" % dir["server"],
         },
@@ -2442,8 +2456,7 @@ def vendorbinCodestyle(phpVersion):
 def vendorbinCodesniffer(phpVersion):
     return [{
         "name": "vendorbin-codesniffer",
-        "image": "owncloudci/php:%s" % phpVersion,
-        "pull": "always",
+        "image": OC_CI_PHP % phpVersion,
         "environment": {
             "COMPOSER_HOME": "%s/.cache/composer" % dir["server"],
         },
@@ -2455,8 +2468,7 @@ def vendorbinCodesniffer(phpVersion):
 def vendorbinPhan(phpVersion):
     return [{
         "name": "vendorbin-phan",
-        "image": "owncloudci/php:%s" % phpVersion,
-        "pull": "always",
+        "image": OC_CI_PHP % phpVersion,
         "environment": {
             "COMPOSER_HOME": "%s/.cache/composer" % dir["server"],
         },
@@ -2468,8 +2480,7 @@ def vendorbinPhan(phpVersion):
 def vendorbinPhpstan(phpVersion):
     return [{
         "name": "vendorbin-phpstan",
-        "image": "owncloudci/php:%s" % phpVersion,
-        "pull": "always",
+        "image": OC_CI_PHP % phpVersion,
         "environment": {
             "COMPOSER_HOME": "%s/.cache/composer" % dir["server"],
         },
@@ -2481,8 +2492,7 @@ def vendorbinPhpstan(phpVersion):
 def vendorbinBehat():
     return [{
         "name": "vendorbin-behat",
-        "image": "owncloudci/php:7.4",
-        "pull": "always",
+        "image": OC_CI_PHP % DEFAULT_PHP_VERSION,
         "environment": {
             "COMPOSER_HOME": "%s/.cache/composer" % dir["server"],
         },
@@ -2494,8 +2504,7 @@ def vendorbinBehat():
 def yarnInstall():
     return [{
         "name": "yarn-install",
-        "image": OC_CI_NODEJS,
-        "pull": "always",
+        "image": OC_CI_NODEJS % DEFAULT_NODEJS_VERSION,
         "environment": {
             "NPM_CONFIG_CACHE": "%s/.cache/npm" % dir["server"],
             "YARN_CACHE_FOLDER": "%s/.cache/yarn" % dir["server"],
@@ -2509,8 +2518,7 @@ def yarnInstall():
 def davInstall(phpVersion, scriptPath):
     return [{
         "name": "dav-install",
-        "image": "owncloudci/php:%s" % phpVersion,
-        "pull": "always",
+        "image": OC_CI_PHP % phpVersion,
         "commands": [
             "bash %s/install.sh" % scriptPath,
         ],
@@ -2519,8 +2527,7 @@ def davInstall(phpVersion, scriptPath):
 def setupLocalStorage(phpVersion):
     return [{
         "name": "setup-storage",
-        "image": "owncloudci/php:%s" % phpVersion,
-        "pull": "always",
+        "image": OC_CI_PHP % phpVersion,
         "environment": {
             "OC_PASS": "123456",
         },
@@ -2537,8 +2544,7 @@ def setupLocalStorage(phpVersion):
 def createShare(phpVersion):
     return [{
         "name": "create-share",
-        "image": "owncloudci/php:%s" % phpVersion,
-        "pull": "always",
+        "image": OC_CI_PHP % phpVersion,
         "commands": [
             'curl -k -s -u user1:123456 -X MKCOL "https://server/remote.php/webdav/new_folder"',
             'curl -k -s -u user1:123456 "https://server/ocs/v2.php/apps/files_sharing/api/v1/shares" --data "path=/new_folder&shareType=0&permissions=15&name=new_folder&shareWith=admin"',
@@ -2564,8 +2570,7 @@ def installExtraApps(phpVersion, extraApps, pathOfServerUnderTest):
 
     return [{
         "name": "install-extra-apps",
-        "image": "owncloudci/php:%s" % phpVersion,
-        "pull": "always",
+        "image": OC_CI_PHP % phpVersion,
         "commands": commandArray,
     }]
 
@@ -2579,7 +2584,6 @@ def databaseServiceForFederation(db, suffix):
     service = {
         "name": dbName + suffix,
         "image": db,
-        "pull": "always",
         "environment": {
             "MYSQL_USER": getDbUsername(db),
             "MYSQL_PASSWORD": getDbPassword(db),
@@ -2594,8 +2598,7 @@ def databaseServiceForFederation(db, suffix):
 def installServer(phpVersion, db, logLevel = "2", ssl = False, federatedServerNeeded = False, proxyNeeded = False):
     return [{
         "name": "install-server",
-        "image": "owncloudci/php:%s" % phpVersion,
-        "pull": "always",
+        "image": OC_CI_PHP % phpVersion,
         "environment": {
             "DB_TYPE": getDbName(db),
             "DB_USERNAME": getDbUsername(db),
@@ -2621,6 +2624,18 @@ def installServer(phpVersion, db, logLevel = "2", ssl = False, federatedServerNe
             "php occ security:certificates:import %s/federated.crt" % dir["base"],
         ] if federatedServerNeeded and ssl else []) + [
             "php occ security:certificates",
+        ],
+    }]
+
+def enableAppsForPhpStan(phpVersion):
+    return [{
+        "name": "enable-apps-for-phpstan",
+        "image": OC_CI_PHP % phpVersion,
+        "commands": [
+            # files_external can be disabled.
+            # We need it to be enabled so that the PHP static analyser can find classes in it.
+            "php occ a:e files_external",
+            "php occ a:l",
         ],
     }]
 
@@ -2671,15 +2686,13 @@ def installFederated(ctx, federatedServerVersion, db, dbSuffix = "fed"):
     return {
         "name": "install-federated",
         "image": OC_CI_CORE_NODEJS,
-        "pull": "always",
         "settings": installerSettings,
     }
 
 def configureFederated(phpVersion, logLevel, protocol):
     return {
         "name": "configure-federated",
-        "image": "owncloudci/php:%s" % phpVersion,
-        "pull": "always",
+        "image": OC_CI_PHP % phpVersion,
         "commands": [
             "cd %s" % dir["federated"],
             "php occ a:l",
@@ -2710,8 +2723,7 @@ def setupCeph(phpVersion, cephS3):
         },
         {
             "name": "setup-ceph",
-            "image": "owncloudci/php:%s" % phpVersion,
-            "pull": "always",
+            "image": OC_CI_PHP % phpVersion,
             "commands": [
                 "cd %s/apps/files_primary_s3" % dir["server"],
                 "cp tests/drone/ceph.config.php %s/config" % dir["server"],
@@ -2743,8 +2755,7 @@ def setupScality(phpVersion, scalityS3):
         },
         {
             "name": "setup-scality",
-            "image": "owncloudci/php:%s" % phpVersion,
-            "pull": "always",
+            "image": OC_CI_PHP % phpVersion,
             "commands": [
                 "cp %s/apps/files_primary_s3/tests/drone/%s %s/config" % (dir["server"], configFile, dir["server"]),
                 "php occ s3:create-bucket owncloud --accept-warning",
@@ -2757,11 +2768,12 @@ def setupScality(phpVersion, scalityS3):
 def fixPermissions(phpVersion, federatedServerNeeded, selUserNeeded = False, pathOfServerUnderTest = dir["server"]):
     return [{
         "name": "fix-permissions",
-        "image": "owncloudci/php:%s" % phpVersion,
-        "pull": "always",
+        "image": OC_CI_PHP % phpVersion,
         "commands": [
-            "chown -R www-data %s" % pathOfServerUnderTest,
+            "chown -R www-data %s" % dir["server"],
         ] + ([
+            "chown -R www-data %s" % pathOfServerUnderTest,
+        ] if (pathOfServerUnderTest != dir["server"]) else []) + ([
             "chown -R www-data %s" % dir["federated"],
         ] if federatedServerNeeded else []) + ([
             "chmod 777 /home/seluser/Downloads/",
@@ -2776,7 +2788,6 @@ def waitForServer(federatedServerNeeded):
     return [{
         "name": "wait-for-server",
         "image": OC_CI_WAIT_FOR,
-        "pull": "always",
         "commands": [
             "wait-for -it server:80 -t 600",
         ] + ([
@@ -2788,7 +2799,6 @@ def owncloudLog(server, folder):
     return [{
         "name": "owncloud-log-%s" % server,
         "image": OC_UBUNTU,
-        "pull": "always",
         "detach": True,
         "commands": [
             "tail -f %s/data/owncloud.log" % folder,
@@ -2804,8 +2814,7 @@ def owncloudDockerService(ocDockerService):
     return [
         {
             "name": "oc-server",
-            "image": "owncloud/server",
-            "pull": "always",
+            "image": OC_SERVER,
             "environment": {
                 "OWNCLOUD_VERSION": "latest",
                 "OWNCLOUD_DOMAIN": "oc-server",
@@ -2829,8 +2838,7 @@ def redisService(redisService):
 
     return [{
         "name": "redis",
-        "image": "webhippie/redis:latest",
-        "pull": "always",
+        "image": WEBHIPPIE_REDIS,
         "environment": {
             "REDIS_DATABASES": 1,
         },
@@ -2861,7 +2869,6 @@ def installCoreFromTarball(version, db, logLevel = "2", ssl = False, federatedSe
     return [{
         "name": "install-tarball",
         "image": OC_CI_CORE_NODEJS,
-        "pull": "always",
         "settings": {
             "version": version,
             "core_path": pathOfServerUnderTest,
@@ -2873,8 +2880,7 @@ def installCoreFromTarball(version, db, logLevel = "2", ssl = False, federatedSe
         },
     }, {
         "name": "configure-tarball",
-        "image": "owncloudci/php:7.4",
-        "pull": "always",
+        "image": OC_CI_PHP % DEFAULT_PHP_VERSION,
         "commands": [
             "cd %s" % pathOfServerUnderTest,
             "php occ a:l",
@@ -2883,6 +2889,7 @@ def installCoreFromTarball(version, db, logLevel = "2", ssl = False, federatedSe
             "php occ config:system:set trusted_domains 1 --value=server",
         ] + ([
             "php occ config:system:set trusted_domains 2 --value=federated",
+            "php occ config:system:set csrf.disabled --value=true",
         ] if federatedServerNeeded else []) + [
         ] + ([
             "php occ config:system:set trusted_domains 3 --value=proxy",
@@ -2916,7 +2923,6 @@ def installFederatedFromTarball(federatedServerVersion, phpVersion, logLevel, pr
         {
             "name": "install-federated",
             "image": OC_CI_CORE_NODEJS,
-            "pull": "always",
             "settings": {
                 "version": federatedServerVersion,
                 "core_path": dir["federated"],
@@ -2929,8 +2935,7 @@ def installFederatedFromTarball(federatedServerVersion, phpVersion, logLevel, pr
         },
         {
             "name": "configure-federation",
-            "image": "owncloudci/php:%s" % phpVersion,
-            "pull": "always",
+            "image": OC_CI_PHP % phpVersion,
             "commands": [
                 'echo "export TEST_SERVER_FED_URL=%s://federated" > %s/saved-settings.sh' % (protocol, dir["base"]),
                 "cd %s" % dir["federated"],
@@ -2951,8 +2956,7 @@ def installFederatedFromTarball(federatedServerVersion, phpVersion, logLevel, pr
 def installTestRunner(ctx, phpVersion):
     return [{
         "name": "install-testrunner",
-        "image": "owncloudci/php:%s" % phpVersion,
-        "pull": "always",
+        "image": OC_CI_PHP % phpVersion,
         "commands": [
             "mkdir /tmp/testrunner",
             "git clone -b %s --depth=1 https://github.com/owncloud/core.git /tmp/testrunner" % ctx.build.source if ctx.build.event == "pull_request" else "master",
@@ -2968,16 +2972,14 @@ def checkStarlark():
         "steps": [
             {
                 "name": "format-check-starlark",
-                "image": "owncloudci/bazel-buildifier",
-                "pull": "always",
+                "image": OC_CI_BAZEL_BUILDIFIER,
                 "commands": [
                     "buildifier --mode=check .drone.star",
                 ],
             },
             {
                 "name": "show-diff",
-                "image": "owncloudci/bazel-buildifier",
-                "pull": "always",
+                "image": OC_CI_BAZEL_BUILDIFIER,
                 "commands": [
                     "buildifier --mode=fix .drone.star",
                     "git diff",
@@ -2996,3 +2998,107 @@ def checkStarlark():
             ],
         },
     }]
+
+def skipIfUnchanged(ctx, type):
+    if ("full-ci" in ctx.build.title.lower()):
+        return []
+
+    skip_step = {
+        "name": "skip-if-unchanged",
+        "image": OC_CI_DRONE_SKIP_PIPELINE,
+        "when": {
+            "event": [
+                "pull_request",
+            ],
+        },
+    }
+
+    # these files are not relevant for test pipelines
+    # if only files in this array are changed, then don't even run the "lint"
+    # pipelines (like code-style, phan, phpstan...)
+    allow_skip_if_changed = [
+        "^.github/.*",
+        "^changelog/.*",
+        "CHANGELOG.md",
+        "CONTRIBUTING.md",
+        "LICENSE",
+        "LICENSE.md",
+        "README.md",
+    ]
+
+    if type == "lint":
+        skip_step["settings"] = {
+            "ALLOW_SKIP_CHANGED": allow_skip_if_changed,
+        }
+        return [skip_step]
+
+    if type == "acceptance-tests":
+        # if any of these files are touched then run all acceptance tests
+        acceptance_files = [
+            "^tests/acceptance/.*",
+            "^tests/drone/.*",
+            "^tests/data/.*",
+            "^tests/TestHelpers/.*",
+            "^tests/enable_all.php",
+            "^tests/preseed-config.php",
+            "^vendor-bin/behat/.*",
+            "^core/.*",
+            "^lib/.*",
+            "^l10n/.*",
+            "^ocm-provider/.*",
+            "^ocs/.*",
+            "^ocs-provider/.*",
+            "^resources/.*",
+            "^settings/.*",
+            "composer.json",
+            "composer.lock",
+            "Makefile",
+            "package.json",
+            "package-lock.json",
+            "yarn.lock",
+        ]
+        skip_step["settings"] = {
+            "DISALLOW_SKIP_CHANGED": acceptance_files,
+        }
+        return [skip_step]
+
+    if type == "unit-tests":
+        # if any of these files are touched then run all unit tests
+        unit_files = [
+            "^tests/apps/.*",
+            "^tests/core/.*",
+            "^tests/data/.*",
+            "^tests/docs/.*",
+            "^tests/lib/.*",
+            "^tests/Settings/.*",
+            "^tests/TestHelpers/.*",
+            "^tests/apps.php",
+            "^tests/bootstrap.php",
+            "^tests/enable_all.php",
+            "^tests/phpunit-autotest.xml",
+            "^tests/phpunit-autotest-external.xml",
+            "^tests/preseed-config.php",
+            "^tests/startsessionlistener.php",
+            "^core/.*",
+            "^lib/.*",
+            "^l10n/.*",
+            "^ocm-provider/.*",
+            "^ocs/.*",
+            "^ocs-provider/.*",
+            "^resources/.*",
+            "^settings/.*",
+            "composer.json",
+            "composer.lock",
+            "Makefile",
+            "package.json",
+            "package-lock.json",
+            "phpunit.xml",
+            "yarn.lock",
+            "sonar-project.properties",
+        ]
+        skip_step["settings"] = {
+            "DISALLOW_SKIP_CHANGED": unit_files,
+        }
+        return [skip_step]
+
+    return []

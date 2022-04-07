@@ -12,7 +12,8 @@ Feature: upload file
   Scenario Outline: upload a file and check download content
     Given using <dav_version> DAV path
     When user "Alice" uploads file with content "uploaded content" to "<file_name>" using the WebDAV API
-    Then the following headers should match these regular expressions for user "Alice"
+    Then the HTTP status code should be "201"
+    And the following headers should match these regular expressions for user "Alice"
       | ETag | /^"[a-f0-9:\.]{1,32}"$/ |
     And the content of file "<file_name>" for user "Alice" should be "uploaded content"
     Examples:
@@ -20,22 +21,26 @@ Feature: upload file
       | old         | /upload.txt       |
       | old         | /नेपाली.txt       |
       | old         | /strängé file.txt |
-      | new         | /upload.txt       |
-      | new         | /strängé file.txt |
-      | new         | /नेपाली.txt       |
       | old         | /s,a,m,p,l,e.txt  |
+      | new         | /upload.txt       |
+      | new         | /नेपाली.txt       |
+      | new         | /strängé file.txt |
       | new         | /s,a,m,p,l,e.txt  |
 
-    @skipOnOcV10
+    @skipOnOcV10 @personalSpace
     Examples:
-      | dav_version | file_name   |
-      | spaces      | /upload.txt |
+      | dav_version | file_name         |
+      | spaces      | /upload.txt       |
+      | spaces      | /नेपाली.txt       |
+      | spaces      | /strängé file.txt |
+      | spaces      | /s,a,m,p,l,e.txt  |
 
 
   Scenario Outline: upload a file and check download content
     Given using <dav_version> DAV path
     When user "Alice" uploads file with content "uploaded content" to <file_name> using the WebDAV API
-    Then the content of file <file_name> for user "Alice" should be "uploaded content"
+    Then the HTTP status code should be "201"
+    And the content of file <file_name> for user "Alice" should be "uploaded content"
     Examples:
       | dav_version | file_name      |
       | old         | "C++ file.cpp" |
@@ -43,12 +48,19 @@ Feature: upload file
       | new         | "C++ file.cpp" |
       | new         | "file #2.txt"  |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version | file_name      |
+      | spaces      | "C++ file.cpp" |
+      | spaces      | "file #2.txt"  |
+
   @issue-ocis-reva-265
   #after fixing all issues delete this Scenario and merge with the one above
   Scenario Outline: upload a file and check download content
     Given using <dav_version> DAV path
     When user "Alice" uploads file with content "uploaded content" to <file_name> using the WebDAV API
-    Then the content of file <file_name> for user "Alice" should be "uploaded content"
+    Then the HTTP status code should be "201"
+    And the content of file <file_name> for user "Alice" should be "uploaded content"
     Examples:
       | dav_version | file_name           |
       | old         | "file ?2.txt"       |
@@ -58,11 +70,19 @@ Feature: upload file
       | new         | " ?fi=le&%#2 . txt" |
       | new         | " # %ab ab?=ed "    |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version | file_name           |
+      | spaces      | "file ?2.txt"       |
+      | spaces      | " ?fi=le&%#2 . txt" |
+      | spaces      | " # %ab ab?=ed "    |
+
 
   Scenario Outline: upload a file with comma in the filename and check download content
     Given using <dav_version> DAV path
     When user "Alice" uploads file with content "file with comma" to <file_name> using the WebDAV API
-    Then the content of file <file_name> for user "Alice" should be "file with comma"
+    Then the HTTP status code should be "201"
+    And the content of file <file_name> for user "Alice" should be "file with comma"
     Examples:
       | dav_version | file_name      |
       | old         | "sample,1.txt" |
@@ -72,12 +92,20 @@ Feature: upload file
       | new         | ",,,.txt"      |
       | new         | ",,,.,"        |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version | file_name      |
+      | spaces      | "sample,1.txt" |
+      | spaces      | ",,,.txt"      |
+      | spaces      | ",,,.,"        |
+
 
   Scenario Outline: upload a file into a folder and check download content
     Given using <dav_version> DAV path
     And user "Alice" has created folder "<folder_name>"
     When user "Alice" uploads file with content "uploaded content" to "<folder_name>/<file_name>" using the WebDAV API
-    Then the content of file "<folder_name>/<file_name>" for user "Alice" should be "uploaded content"
+    Then the HTTP status code should be "201"
+    And the content of file "<folder_name>/<file_name>" for user "Alice" should be "uploaded content"
     Examples:
       | dav_version | folder_name                      | file_name                     |
       | old         | /upload                          | abc.txt                       |
@@ -91,19 +119,35 @@ Feature: upload file
       | new         | /नेपाली                          | नेपाली                        |
       | new         | /folder #2.txt                   | file #2.txt                   |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version | folder_name     | file_name        |
+      | spaces      | /strängé folder | strängé file.txt |
+      | spaces      | /upload         | abc.txt          |
+      | spaces      | /C++ folder     | C++ file.cpp     |
+      | spaces      | /नेपाली         | नेपाली           |
+      | spaces      | /folder #2.txt  | file #2.txt      |
+
   @issue-ocis-reva-265
     #after fixing all issues delete this Scenario and merge with the one above
   Scenario Outline: upload a file into a folder and check download content
     Given using <dav_version> DAV path
     And user "Alice" has created folder "<folder_name>"
     When user "Alice" uploads file with content "uploaded content" to "<folder_name>/<file_name>" using the WebDAV API
-    Then the content of file "<folder_name>/<file_name>" for user "Alice" should be "uploaded content"
+    Then the HTTP status code should be "201"
+    And the content of file "<folder_name>/<file_name>" for user "Alice" should be "uploaded content"
     Examples:
       | dav_version | folder_name       | file_name    |
       | old         | /folder ?2.txt    | file ?2.txt  |
       | old         | /?fi=le&%#2 . txt | # %ab ab?=ed |
       | new         | /folder ?2.txt    | file ?2.txt  |
       | new         | /?fi=le&%#2 . txt | # %ab ab?=ed |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version | folder_name       | file_name    |
+      | spaces      | /folder ?2.txt    | file ?2.txt  |
+      | spaces      | /?fi=le&%#2 . txt | # %ab ab?=ed |
 
   @skipOnOcV10.3 @skipOnOcV10.4 @skipOnOcV10.5
   Scenario Outline: attempt to upload a file into a nonexistent folder
@@ -116,6 +160,11 @@ Feature: upload file
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @issue-ocis-reva-15
   Scenario Outline: Uploading file to path with extension .part should not be possible
@@ -132,12 +181,18 @@ Feature: upload file
       | old         |
       | new         |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
 
   Scenario Outline: upload a file into a folder with dots in the path and check download content
     Given using <dav_version> DAV path
     And user "Alice" has created folder "<folder_name>"
     When user "Alice" uploads file with content "uploaded content for file name ending with a dot" to "<folder_name>/<file_name>" using the WebDAV API
-    Then as "Alice" file "/<folder_name>/<file_name>" should exist
+    Then the HTTP status code should be "201"
+    And as "Alice" file "/<folder_name>/<file_name>" should exist
     And the content of file "<folder_name>/<file_name>" for user "Alice" should be "uploaded content for file name ending with a dot"
     Examples:
       | dav_version | folder_name   | file_name   |
@@ -153,6 +208,15 @@ Feature: upload file
       | new         | /upload...1.. | abc...txt.. |
       | new         | /...          | ...         |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version | folder_name   | file_name   |
+      | spaces      | /upload.      | abc.        |
+      | spaces      | /upload.      | abc .       |
+      | spaces      | /upload.1     | abc.txt     |
+      | spaces      | /upload...1.. | abc...txt.. |
+      | spaces      | /...          | ...         |
+
   @issue-ocis-reva-174
   Scenario Outline: upload file with mtime
     Given using <dav_version> DAV path
@@ -164,6 +228,11 @@ Feature: upload file
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @issue-ocis-reva-174
   Scenario Outline: upload a file with mtime in a folder
@@ -178,32 +247,49 @@ Feature: upload file
       | old         |
       | new         |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
   @issue-ocis-reva-174
   Scenario Outline: moving a file does not change its mtime
     Given using <dav_version> DAV path
     And user "Alice" has created folder "testFolder"
     When user "Alice" uploads file "filesForUpload/textfile.txt" to "file.txt" with mtime "Thu, 08 Aug 2019 04:18:13 GMT" using the WebDAV API
     And user "Alice" moves file "file.txt" to "/testFolder/file.txt" using the WebDAV API
-    Then as "Alice" file "/testFolder/file.txt" should exist
-    And the HTTP status code should be "201"
+    Then the HTTP status code should be "201"
+    And as "Alice" file "/testFolder/file.txt" should exist
     And as "Alice" the mtime of the file "/testFolder/file.txt" should be "Thu, 08 Aug 2019 04:18:13 GMT"
     Examples:
       | dav_version |
       | old         |
       | new         |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
   @issue-ocis-reva-174
   Scenario Outline: overwriting a file changes its mtime
     Given using <dav_version> DAV path
     And user "Alice" has uploaded file with content "first time upload content" to "file.txt"
     When user "Alice" uploads a file with content "Overwrite file" and mtime "Thu, 08 Aug 2019 04:18:13 GMT" to "file.txt" using the WebDAV API
-    Then as "Alice" file "file.txt" should exist
+    Then the HTTP status code should be "201"
+    And as "Alice" file "file.txt" should exist
     And as "Alice" the mtime of the file "file.txt" should be "Thu, 08 Aug 2019 04:18:13 GMT"
     And the content of file "file.txt" for user "Alice" should be "Overwrite file"
     Examples:
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
 
   Scenario Outline: upload a hidden file and check download content
     Given using <dav_version> DAV path
@@ -225,3 +311,14 @@ Feature: upload file
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
+
+  Scenario: upload a file of size zero byte
+    When user "Alice" uploads file "filesForUpload/zerobyte.txt" to "/zerobyte.txt" using the WebDAV API
+    Then the HTTP status code should be "201"
+    And as "Alice" file "zerobyte.txt" should exist

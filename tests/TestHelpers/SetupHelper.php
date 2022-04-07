@@ -917,10 +917,12 @@ class SetupHelper extends \PHPUnit\Framework\Assert {
 		$resultXml = \simplexml_load_string($contents);
 
 		if ($resultXml === false) {
+			$status = $result->getStatusCode();
 			throw new Exception(
 				"Response is not valid XML after executing 'occ $argsString'. " .
+				"HTTP status was $status. " .
 				$isTestingAppEnabledText .
-				$contents
+				"Response contents were '$contents'"
 			);
 		}
 
@@ -1057,7 +1059,15 @@ class SetupHelper extends \PHPUnit\Framework\Assert {
 		);
 		// stdOut should have a string like "Storage created with id 65"
 		$storageIdWords = \explode(" ", \trim($result['stdOut']));
-		$result['storageId'] = (int)$storageIdWords[4];
+		if (\array_key_exists(4, $storageIdWords)) {
+			$result['storageId'] = (int)$storageIdWords[4];
+		} else {
+			// presumably something went wrong with the files_external:create command
+			// so return "unknown" to the caller. The result array has the command exit
+			// code and stdErr output etc., so the caller can process what it likes
+			// of that information to work out what went wrong.
+			$result['storageId'] = "unknown";
+		}
 		return $result;
 	}
 

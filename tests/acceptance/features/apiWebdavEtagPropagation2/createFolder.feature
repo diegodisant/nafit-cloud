@@ -13,7 +13,8 @@ Feature: propagation of etags when creating folders
     And user "Alice" has stored etag of element "/"
     And user "Alice" has stored etag of element "/folder"
     When user "Alice" creates folder "/folder/new" using the WebDAV API
-    Then these etags should have changed:
+    Then the HTTP status code should be "201"
+    And these etags should have changed:
       | user  | path    |
       | Alice | /       |
       | Alice | /folder |
@@ -21,6 +22,11 @@ Feature: propagation of etags when creating folders
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
 
   Scenario Outline: creating an invalid folder inside a folder should not change any etags
@@ -31,7 +37,8 @@ Feature: propagation of etags when creating folders
     And user "Alice" has stored etag of element "/folder"
     And user "Alice" has stored etag of element "/folder/sub"
     When user "Alice" creates folder "/folder/sub/.." using the WebDAV API
-    Then these etags should not have changed:
+    Then the HTTP status code should be "405"
+    And these etags should not have changed:
       | user  | path        |
       | Alice | /           |
       | Alice | /folder     |
@@ -40,6 +47,11 @@ Feature: propagation of etags when creating folders
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @skipOnOcis-OC-Storage @issue-product-280 @skipOnOcV10.6 @skipOnOcV10.7 @skipOnOcV10.8.0
   Scenario Outline: as share receiver creating a folder inside a folder received as a share changes its etag for all collaborators
@@ -54,7 +66,8 @@ Feature: propagation of etags when creating folders
     And user "Brian" has stored etag of element "/Shares"
     And user "Brian" has stored etag of element "/Shares/folder"
     When user "Brian" creates folder "/Shares/folder/new" using the WebDAV API
-    Then these etags should have changed:
+    Then the HTTP status code should be "201"
+    And these etags should have changed:
       | user  | path           |
       | Alice | /              |
       | Alice | /folder        |
@@ -65,6 +78,11 @@ Feature: propagation of etags when creating folders
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @skipOnOcis-OC-Storage @issue-product-280 @skipOnOcV10.6 @skipOnOcV10.7 @skipOnOcV10.8.0
   Scenario Outline: as sharer creating a folder inside a folder received as a share changes its etag for all collaborators
@@ -79,7 +97,8 @@ Feature: propagation of etags when creating folders
     And user "Brian" has stored etag of element "/Shares"
     And user "Brian" has stored etag of element "/Shares/folder"
     When user "Alice" creates folder "/folder/new" using the WebDAV API
-    Then these etags should have changed:
+    Then the HTTP status code should be "201"
+    And these etags should have changed:
       | user  | path           |
       | Alice | /              |
       | Alice | /folder        |
@@ -91,16 +110,32 @@ Feature: propagation of etags when creating folders
       | old         |
       | new         |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
   @skipOnOcis-OC-Storage @issue-product-280
-  Scenario: creating a folder in a publicly shared folder changes its etag for the sharer
-    Given user "Alice" has created folder "/folder"
+  Scenario Outline: creating a folder in a publicly shared folder changes its etag for the sharer
+    Given using <dav_version> DAV path
+    And user "Alice" has created folder "/folder"
     And user "Alice" has created a public link share with settings
       | path        | folder |
       | permissions | create |
     And user "Alice" has stored etag of element "/"
     And user "Alice" has stored etag of element "/folder"
     When the public creates folder "created-by-public" using the new public WebDAV API
-    Then these etags should have changed:
+    Then the HTTP status code should be "201"
+    And these etags should have changed:
       | user  | path    |
       | Alice | /       |
       | Alice | /folder |
+    Examples:
+      | dav_version |
+      | old         |
+      | new         |
+
+  @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |

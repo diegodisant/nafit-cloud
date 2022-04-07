@@ -22,27 +22,39 @@ Feature: favorite
     When user "Alice" gets the following properties of folder "/FOLDER" using the WebDAV API
       | propertyName |
       | oc:favorite  |
-    Then the single response should contain a property "oc:favorite" with value "1"
+    Then the HTTP status code should be "207"
+    And the single response should contain a property "oc:favorite" with value "1"
     Examples:
       | dav_version |
       | old         |
       | new         |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
   @issue-ocis-reva-276
-  Scenario Outline: Favorite and unfavorite a folder
+  Scenario Outline: Unfavorite a folder
     Given using <dav_version> DAV path
-    When user "Alice" favorites element "/FOLDER" using the WebDAV API
-    And user "Alice" unfavorites element "/FOLDER" using the WebDAV API
+    And user "Alice" has favorited element "/FOLDER"
+    When user "Alice" unfavorites element "/FOLDER" using the WebDAV API
     Then the HTTP status code should be "207"
     And as user "Alice" folder "/FOLDER" should not be favorited
     When user "Alice" gets the following properties of folder "/FOLDER" using the WebDAV API
       | propertyName |
       | oc:favorite  |
-    Then the single response should contain a property "oc:favorite" with value "0"
+    Then the HTTP status code should be "207"
+    And the single response should contain a property "oc:favorite" with value "0"
     Examples:
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @smokeTest @issue-ocis-reva-276
   Scenario Outline: Favorite a file
@@ -53,27 +65,39 @@ Feature: favorite
     When user "Alice" gets the following properties of file "/textfile0.txt" using the WebDAV API
       | propertyName |
       | oc:favorite  |
-    Then the single response should contain a property "oc:favorite" with value "1"
+    Then the HTTP status code should be "207"
+    And the single response should contain a property "oc:favorite" with value "1"
     Examples:
       | dav_version |
       | old         |
       | new         |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
   @smokeTest @issue-ocis-reva-276
-  Scenario Outline: Favorite and unfavorite a file
+  Scenario Outline: Unfavorite a file
     Given using <dav_version> DAV path
-    When user "Alice" favorites element "/textfile0.txt" using the WebDAV API
-    And user "Alice" unfavorites element "/textfile0.txt" using the WebDAV API
+    And user "Alice" has favorited element "/textfile0.txt"
+    When user "Alice" unfavorites element "/textfile0.txt" using the WebDAV API
     Then the HTTP status code should be "207"
     And as user "Alice" file "/textfile0.txt" should not be favorited
     When user "Alice" gets the following properties of file "/textfile0.txt" using the WebDAV API
       | propertyName |
       | oc:favorite  |
-    Then the single response should contain a property "oc:favorite" with value "0"
+    Then the HTTP status code should be "207"
+    And the single response should contain a property "oc:favorite" with value "0"
     Examples:
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @smokeTest
   Scenario Outline: Get favorited elements of a folder
@@ -90,6 +114,11 @@ Feature: favorite
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   Scenario Outline: Get favorited elements of a subfolder
     Given using <dav_version> DAV path
@@ -112,7 +141,12 @@ Feature: favorite
       | old         |
       | new         |
 
-  @files_sharing-app-required
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
+  @files_sharing-app-required @issue-ocis-2968
   Scenario Outline: moving a favorite file out of a share keeps favorite state
     Given using <dav_version> DAV path
     And user "Brian" has been created with default attributes and without skeleton files
@@ -127,6 +161,11 @@ Feature: favorite
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @issue-33840 @skipOnOcV10
   Scenario Outline: Get favorited elements and limit count of entries
@@ -147,6 +186,11 @@ Feature: favorite
       | dav_version |
       | old         |
       | new         |
+
+    @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @issue-33840 @skipOnOcV10
   Scenario Outline: Get favorited elements paginated in subfolder
@@ -176,6 +220,11 @@ Feature: favorite
       | old         |
       | new         |
 
+    @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
   @files_sharing-app-required @notToImplementOnOCIS
   Scenario Outline: sharer file favorite state should not change the favorite state of sharee
     Given using <dav_version> DAV path
@@ -184,6 +233,7 @@ Feature: favorite
     And user "Alice" has shared file "/favoriteFile.txt" with user "Brian"
     When user "Alice" favorites element "/favoriteFile.txt" using the WebDAV API
     Then the HTTP status code should be "207"
+    And as user "Alice" file "/favoriteFile.txt" should be favorited
     And as user "Brian" file "/favoriteFile.txt" should not be favorited
     Examples:
       | dav_version |
@@ -216,6 +266,11 @@ Feature: favorite
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @files_sharing-app-required @notToImplementOnOCIS
   Scenario Outline: favorite a file inside of a received share

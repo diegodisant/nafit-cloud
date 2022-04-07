@@ -24,7 +24,7 @@ Feature: list files
       | simple-folder/simple-folder1/simple-folder2/welcome.txt   |
 
 
-  Scenario Outline: Get the list of resources in the root folder
+  Scenario Outline: Get the list of resources in the root folder with depth 0
     Given using <dav_version> DAV path
     When user "Alice" lists the resources in "/" with depth "0" using the WebDAV API
     Then the HTTP status code should be "207"
@@ -37,7 +37,20 @@ Feature: list files
       | simple-folder/textfile0.txt       |
       | simple-folder/simple-empty-folder |
       | simple-folder/simple-folder1      |
-    When user "Alice" lists the resources in "/" with depth 1 using the WebDAV API
+    Examples:
+      | dav_version |
+      | old         |
+      | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
+
+  Scenario Outline: Get the list of resources in the root folder with depth 1
+    Given using <dav_version> DAV path
+    When user "Alice" lists the resources in "/" with depth "1" using the WebDAV API
     Then the HTTP status code should be "207"
     And the last DAV response for user "Alice" should contain these nodes
       | name           |
@@ -50,6 +63,19 @@ Feature: list files
       | simple-folder/textfile0.txt       |
       | simple-folder/simple-empty-folder |
       | simple-folder/simple-folder1      |
+    Examples:
+      | dav_version |
+      | old         |
+      | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
+
+  Scenario Outline: Get the list of resources in the root folder with depth infinity
+    Given using <dav_version> DAV path
     When user "Alice" lists the resources in "/" with depth "infinity" using the WebDAV API
     Then the HTTP status code should be "207"
     And the last DAV response for user "Alice" should contain these nodes
@@ -59,6 +85,7 @@ Feature: list files
       | simple-folder/                                            |
       | simple-folder/textfile0.txt                               |
       | simple-folder/welcome.txt                                 |
+      | simple-folder/simple-empty-folder/                        |
       | simple-folder/simple-folder1/                             |
       | simple-folder/simple-folder1/simple-folder2               |
       | simple-folder/simple-folder1/textfile0.txt                |
@@ -70,8 +97,13 @@ Feature: list files
       | old         |
       | new         |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
-  Scenario Outline: Get the list of resources in a folder
+
+  Scenario Outline: Get the list of resources in a folder with depth 0
     Given using <dav_version> DAV path
     When user "Alice" lists the resources in "/simple-folder" with depth "0" using the WebDAV API
     Then the HTTP status code should be "207"
@@ -84,7 +116,20 @@ Feature: list files
       | simple-folder/textfile0.txt       |
       | simple-folder/simple-empty-folder |
       | simple-folder/simple-folder1      |
-    When user "Alice" lists the resources in "/simple-folder" with depth 1 using the WebDAV API
+    Examples:
+      | dav_version |
+      | old         |
+      | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
+
+  Scenario Outline: Get the list of resources in a folder with depth 1
+    Given using <dav_version> DAV path
+    When user "Alice" lists the resources in "/simple-folder" with depth "1" using the WebDAV API
     Then the HTTP status code should be "207"
     And the last DAV response for user "Alice" should contain these nodes
       | name                              |
@@ -99,6 +144,19 @@ Feature: list files
       | simple-folder/simple-folder1/welcome.txt                  |
       | simple-folder/simple-folder1/simple-folder2/textfile0.txt |
       | simple-folder/simple-folder1/simple-folder2/welcome.txt   |
+    Examples:
+      | dav_version |
+      | old         |
+      | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
+
+  Scenario Outline: Get the list of resources in a folder with depth infinity
+    Given using <dav_version> DAV path
     When user "Alice" lists the resources in "/simple-folder" with depth "infinity" using the WebDAV API
     Then the HTTP status code should be "207"
     And the last DAV response for user "Alice" should contain these nodes
@@ -116,15 +174,20 @@ Feature: list files
       | old         |
       | new         |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
-  Scenario Outline: Get the list of resources in a folder shared through public link
+
+  Scenario Outline: Get the list of resources in a folder shared through public link with depth 0
     Given using <dav_version> DAV path
     And user "Alice" has created the following folders
       | path                                                                       |
       | /simple-folder/simple-folder1/simple-folder2/simple-folder3                |
       | /simple-folder/simple-folder1/simple-folder2/simple-folder3/simple-folder4 |
     And user "Alice" has created a public link share of folder "simple-folder"
-    When the public lists the resources in the last created public link with depth 0 using the WebDAV API
+    When the public lists the resources in the last created public link with depth "0" using the WebDAV API
     Then the HTTP status code should be "207"
     And the last public link DAV response should not contain these nodes
       | name                                                         |
@@ -138,7 +201,29 @@ Feature: list files
       | /simple-folder1/simple-folder2/welcome.txt                   |
       | /simple-folder1/simple-folder2/simple-folder3                |
       | /simple-folder1/simple-folder2/simple-folder3/simple-folder4 |
-    When the public lists the resources in the last created public link with depth 1 using the WebDAV API
+    @notToImplementOnOCIS @issue-ocis-2079
+    Examples:
+      | dav_version |
+      | old         |
+
+    Examples:
+      | dav_version |
+      | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
+
+  Scenario Outline: Get the list of resources in a folder shared through public link with depth 1
+    Given using <dav_version> DAV path
+    And user "Alice" has created the following folders
+      | path                                                                       |
+      | /simple-folder/simple-folder1/simple-folder2/simple-folder3                |
+      | /simple-folder/simple-folder1/simple-folder2/simple-folder3/simple-folder4 |
+    And user "Alice" has created a public link share of folder "simple-folder"
+    When the public lists the resources in the last created public link with depth "1" using the WebDAV API
     Then the HTTP status code should be "207"
     And the last public link DAV response should contain these nodes
       | name             |
@@ -154,7 +239,29 @@ Feature: list files
       | /simple-folder1/simple-folder2                               |
       | /simple-folder1/textfile0.txt                                |
       | /simple-folder1/simple-folder2/simple-folder3/simple-folder4 |
-    When the public lists the resources in the last created public link with depth infinity using the WebDAV API
+    @notToImplementOnOCIS @issue-ocis-2079
+    Examples:
+      | dav_version |
+      | old         |
+
+    Examples:
+      | dav_version |
+      | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
+
+  Scenario Outline: Get the list of resources in a folder shared through public link with depth infinity
+    Given using <dav_version> DAV path
+    And user "Alice" has created the following folders
+      | path                                                                       |
+      | /simple-folder/simple-folder1/simple-folder2/simple-folder3                |
+      | /simple-folder/simple-folder1/simple-folder2/simple-folder3/simple-folder4 |
+    And user "Alice" has created a public link share of folder "simple-folder"
+    When the public lists the resources in the last created public link with depth "infinity" using the WebDAV API
     Then the HTTP status code should be "207"
     And the last public link DAV response should contain these nodes
       | name                                                         |
@@ -178,15 +285,20 @@ Feature: list files
       | dav_version |
       | new         |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
-  Scenario: Get the list of files in a folder in the trashbin
-    Given using new DAV path
+
+  Scenario Outline: Get the list of files in a folder in the trashbin with depth 0
+    Given using <dav_version> DAV path
     And user "Alice" has deleted the following resources
       | path           |
       | textfile0.txt  |
       | welcome.txt    |
       | simple-folder/ |
-    When user "Alice" lists the resources in the trashbin path "/" with depth 0 using the WebDAV API
+    When user "Alice" lists the resources in the trashbin path "/" with depth "0" using the WebDAV API
     Then the HTTP status code should be "207"
     And the trashbin DAV response should not contain these nodes
       | name                                                      |
@@ -199,7 +311,25 @@ Feature: list files
       | simple-folder/simple-folder1/welcome.txt                  |
       | simple-folder/simple-folder1/simple-folder2/textfile0.txt |
       | simple-folder/simple-folder1/simple-folder2/welcome.txt   |
-    When user "Alice" lists the resources in the trashbin path "/" with depth 1 using the WebDAV API
+    Examples:
+      | dav_version |
+      | old         |
+      | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
+
+  Scenario Outline: Get the list of files in a folder in the trashbin with depth 1
+    Given using <dav_version> DAV path
+    And user "Alice" has deleted the following resources
+      | path           |
+      | textfile0.txt  |
+      | welcome.txt    |
+      | simple-folder/ |
+    When user "Alice" lists the resources in the trashbin path "/" with depth "1" using the WebDAV API
     Then the HTTP status code should be "207"
     And the trashbin DAV response should contain these nodes
       | name           |
@@ -214,7 +344,25 @@ Feature: list files
       | simple-folder/simple-folder1/welcome.txt                  |
       | simple-folder/simple-folder1/simple-folder2/textfile0.txt |
       | simple-folder/simple-folder1/simple-folder2/welcome.txt   |
-    When user "Alice" lists the resources in the trashbin path "/" with depth infinity using the WebDAV API
+    Examples:
+      | dav_version |
+      | old         |
+      | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
+
+  Scenario Outline: Get the list of files in a folder in the trashbin with depth infinity
+    Given using <dav_version> DAV path
+    And user "Alice" has deleted the following resources
+      | path           |
+      | textfile0.txt  |
+      | welcome.txt    |
+      | simple-folder/ |
+    When user "Alice" lists the resources in the trashbin path "/" with depth "infinity" using the WebDAV API
     Then the HTTP status code should be "207"
     And the trashbin DAV response should contain these nodes
       | name                                                      |
@@ -227,3 +375,12 @@ Feature: list files
       | simple-folder/simple-folder1/welcome.txt                  |
       | simple-folder/simple-folder1/simple-folder2/textfile0.txt |
       | simple-folder/simple-folder1/simple-folder2/welcome.txt   |
+    Examples:
+      | dav_version |
+      | old         |
+      | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |

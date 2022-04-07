@@ -372,6 +372,7 @@ trait Sharing {
 		$rows[] = ['shareType', 'public_link'];
 		$newBody = new TableNode($rows);
 		$this->createShareWithSettings($user, $newBody);
+		$this->pushToLastStatusCodesArrays();
 	}
 
 	/**
@@ -387,6 +388,8 @@ trait Sharing {
 		$this->userCreatesAPublicLinkShareWithSettings($user, $body);
 		$this->ocsContext->theOCSStatusCodeShouldBe("100,200");
 		$this->theHTTPStatusCodeShouldBe(200);
+		$this->emptyLastHTTPStatusCodesArray();
+		$this->emptyLastOCSStatusCodesArray();
 	}
 
 	/**
@@ -1388,6 +1391,7 @@ trait Sharing {
 			$user2,
 			$permissions
 		);
+		$this->pushToLastStatusCodesArrays();
 	}
 
 	/**
@@ -1654,6 +1658,7 @@ trait Sharing {
 			$group,
 			$permissions
 		);
+		$this->pushToLastStatusCodesArrays();
 	}
 
 	/**
@@ -1911,6 +1916,47 @@ trait Sharing {
 		}
 		$language = TranslationHelper::getLanguage($language);
 		$this->getShareData($user, (string)$share_id, $language);
+		$this->pushToLastStatusCodesArrays();
+	}
+
+	/**
+	 * @Then /^as "([^"]*)" the info about the last share by user "([^"]*)" with user "([^"]*)" should include$/
+	 *
+	 * @param string $requestor
+	 * @param string $sharer
+	 * @param string $sharee
+	 * @param TableNode $table
+	 *
+	 * @return void
+	 * @throws Exception
+	 */
+	public function asLastShareInfoAboutUserSharingWithUserShouldInclude(
+		string $requestor,
+		string $sharer,
+		string $sharee,
+		TableNode $table
+	) {
+		$this->userGetsInfoOfLastShareUsingTheSharingApi($requestor);
+		$this->ocsContext->assertOCSResponseIndicatesSuccess();
+		$this->checkFieldsOfLastResponseToUser($sharer, $sharee, $table);
+	}
+
+	/**
+	 * @Then /^the info about the last share by user "([^"]*)" with (?:user|group) "([^"]*)" should include$/
+	 *
+	 * @param string $sharer
+	 * @param string $sharee
+	 * @param TableNode $table
+	 *
+	 * @return void
+	 * @throws Exception
+	 */
+	public function theInfoAboutTheLastShareByUserWithUserShouldInclude(
+		string $sharer,
+		string $sharee,
+		TableNode $table
+	):void {
+		$this->asLastShareInfoAboutUserSharingWithUserShouldInclude($sharer, $sharer, $sharee, $table);
 	}
 
 	/**
@@ -2236,6 +2282,13 @@ trait Sharing {
 			200,
 			"Error getting info of last share for user $user"
 		);
+		$this->ocsContext->assertOCSResponseIndicatesSuccess(
+			__METHOD__ .
+			' Error getting info of last share for user $user\n' .
+			$this->ocsContext->getOCSResponseStatusMessage(
+				$this->getResponse()
+			) . '"'
+		);
 		$this->checkFields($user, $body);
 	}
 
@@ -2247,7 +2300,6 @@ trait Sharing {
 	 *
 	 * @return void
 	 * @throws Exception
-	 *
 	 */
 	public function informationOfLastShareShouldInclude(
 		string $user,
@@ -2977,6 +3029,7 @@ trait Sharing {
 			$url,
 			null
 		);
+		$this->pushToLastStatusCodesArrays();
 	}
 
 	/**
@@ -3058,6 +3111,8 @@ trait Sharing {
 			200,
 			__METHOD__ . " could not $actionText share $share to $user by $offeredBy"
 		);
+		$this->emptyLastHTTPStatusCodesArray();
+		$this->emptyLastOCSStatusCodesArray();
 	}
 
 	/**
@@ -3076,6 +3131,7 @@ trait Sharing {
 
 	/**
 	 * @Given /^user "([^"]*)" has accepted the (?:first|next|) pending share "([^"]*)" offered by user "([^"]*)"$/
+	 * @Then /^user "([^"]*)" should be able to accept pending share "([^"]*)" offered by user "([^"]*)"$/
 	 *
 	 * @param string $user
 	 * @param string $share
@@ -3084,12 +3140,13 @@ trait Sharing {
 	 * @return void
 	 * @throws Exception
 	 */
-	public function userHasAcceptedThePendingShareOfferedBy($user, $share, $offeredBy) {
+	public function userHasAcceptedThePendingShareOfferedBy(string $user, string $share, string $offeredBy) {
 		$this->userAcceptsThePendingShareOfferedBy($user, $share, $offeredBy);
 		$this->theHTTPStatusCodeShouldBe(
 			200,
 			__METHOD__ . " could not accept the pending share $share to $user by $offeredBy"
 		);
+		$this->ocsContext->assertOCSResponseIndicatesSuccess();
 	}
 
 	/**
@@ -3335,6 +3392,30 @@ trait Sharing {
 		$shareData = $this->getLastShareData();
 		$token = (string) $shareData->data->token;
 		$this->getPublicPreviewOfFile($path, $token);
+		$this->pushToLastStatusCodesArrays();
+	}
+
+	/**
+	 * @When the public accesses the preview of the following files from the last shared public link using the sharing API
+	 *
+	 * @param TableNode $table
+	 *
+	 * @throws Exception
+	 * @return void
+	 */
+	public function thePublicAccessesThePreviewOfTheFollowingSharedFileUsingTheSharingApi(
+		TableNode $table
+	):void {
+		$this->verifyTableNodeColumns($table, ["path"]);
+		$paths = $table->getHash();
+		$this->emptyLastHTTPStatusCodesArray();
+		$this->emptyLastOCSStatusCodesArray();
+		foreach ($paths as $path) {
+			$shareData = $this->getLastShareData();
+			$token = (string) $shareData->data->token;
+			$this->getPublicPreviewOfFile($path["path"], $token);
+			$this->pushToLastStatusCodesArrays();
+		}
 	}
 
 	/**

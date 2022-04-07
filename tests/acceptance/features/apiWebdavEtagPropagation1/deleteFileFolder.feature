@@ -16,7 +16,8 @@ Feature: propagation of etags when deleting a file or folder
     And user "Alice" has stored etag of element "/upload"
     And user "Alice" has stored etag of element "/upload/sub"
     When user "Alice" deletes file "/upload/sub/file.txt" using the WebDAV API
-    Then these etags should have changed:
+    Then the HTTP status code should be "204"
+    And these etags should have changed:
       | user  | path        |
       | Alice | /           |
       | Alice | /upload     |
@@ -25,6 +26,11 @@ Feature: propagation of etags when deleting a file or folder
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @skipOnOcis-OC-Storage @issue-product-280
   Scenario Outline: deleting a folder changes the etags of all parents
@@ -35,7 +41,8 @@ Feature: propagation of etags when deleting a file or folder
     And user "Alice" has stored etag of element "/upload"
     And user "Alice" has stored etag of element "/upload/sub"
     When user "Alice" deletes folder "/upload/sub/toDelete" using the WebDAV API
-    Then these etags should have changed:
+    Then the HTTP status code should be "204"
+    And these etags should have changed:
       | user  | path        |
       | Alice | /           |
       | Alice | /upload     |
@@ -44,6 +51,11 @@ Feature: propagation of etags when deleting a file or folder
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
 
   Scenario Outline: deleting a folder with content changes the etags of all parents
@@ -55,7 +67,8 @@ Feature: propagation of etags when deleting a file or folder
     And user "Alice" has stored etag of element "/upload"
     And user "Alice" has stored etag of element "/upload/sub"
     When user "Alice" deletes folder "/upload/sub/toDelete" using the WebDAV API
-    Then these etags should have changed:
+    Then the HTTP status code should be "204"
+    And these etags should have changed:
       | user  | path        |
       | Alice | /           |
       | Alice | /upload     |
@@ -64,6 +77,11 @@ Feature: propagation of etags when deleting a file or folder
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @skipOnOcV10.6 @skipOnOcV10.7 @skipOnOcV10.8.0
   Scenario Outline: as share receiver deleting a file changes the etags of all parents for all collaborators
@@ -81,7 +99,8 @@ Feature: propagation of etags when deleting a file or folder
     And user "Brian" has stored etag of element "/Shares/upload"
     And user "Brian" has stored etag of element "/Shares/upload/sub"
     When user "Brian" deletes file "/Shares/upload/sub/file.txt" using the WebDAV API
-    Then these etags should have changed:
+    Then the HTTP status code should be "204"
+    And these etags should have changed:
       | user  | path               |
       | Alice | /                  |
       | Alice | /upload            |
@@ -94,6 +113,11 @@ Feature: propagation of etags when deleting a file or folder
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @skipOnOcV10.6 @skipOnOcV10.7 @skipOnOcV10.8.0
   Scenario Outline: as sharer deleting a file changes the etags of all parents for all collaborators
@@ -111,7 +135,8 @@ Feature: propagation of etags when deleting a file or folder
     And user "Brian" has stored etag of element "/Shares/upload"
     And user "Brian" has stored etag of element "/Shares/upload/sub"
     When user "Alice" deletes file "/upload/sub/file.txt" using the WebDAV API
-    Then these etags should have changed:
+    Then the HTTP status code should be "204"
+    And these etags should have changed:
       | user  | path               |
       | Alice | /                  |
       | Alice | /upload            |
@@ -124,6 +149,11 @@ Feature: propagation of etags when deleting a file or folder
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @skipOnOcis-OC-Storage @issue-product-280 @skipOnOcV10.6 @skipOnOcV10.7 @skipOnOcV10.8.0
   Scenario Outline: as share receiver deleting a folder changes the etags of all parents for all collaborators
@@ -143,7 +173,8 @@ Feature: propagation of etags when deleting a file or folder
     And user "Brian" has stored etag of element "/Shares/upload"
     And user "Brian" has stored etag of element "/Shares/upload/sub"
     When user "Brian" deletes folder "/Shares/upload/sub/toDelete" using the WebDAV API
-    Then these etags should have changed:
+    Then the HTTP status code should be "204"
+    And these etags should have changed:
       | user  | path               |
       | Alice | /                  |
       | Alice | /upload            |
@@ -156,6 +187,11 @@ Feature: propagation of etags when deleting a file or folder
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @skipOnOcis-OC-Storage @issue-product-280 @skipOnOcV10.6 @skipOnOcV10.7 @skipOnOcV10.8.0
   Scenario Outline: as sharer deleting a folder changes the etags of all parents for all collaborators
@@ -175,7 +211,8 @@ Feature: propagation of etags when deleting a file or folder
     And user "Brian" has stored etag of element "/Shares/upload"
     And user "Brian" has stored etag of element "/Shares/upload/sub"
     When user "Alice" deletes folder "/upload/sub/toDelete" using the WebDAV API
-    Then these etags should have changed:
+    Then the HTTP status code should be "204"
+    And these etags should have changed:
       | user  | path               |
       | Alice | /                  |
       | Alice | /upload            |
@@ -189,30 +226,57 @@ Feature: propagation of etags when deleting a file or folder
       | old         |
       | new         |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
   @skipOnOcis-OC-Storage @issue-product-280
-  Scenario: deleting a file in a publicly shared folder changes its etag for the sharer
-    Given user "Alice" has uploaded file with content "uploaded content" to "/upload/file.txt"
+  Scenario Outline: deleting a file in a publicly shared folder changes its etag for the sharer
+    Given using <dav_version> DAV path
+    And user "Alice" has uploaded file with content "uploaded content" to "/upload/file.txt"
     And user "Alice" has created a public link share with settings
       | path        | upload |
       | permissions | change |
     And user "Alice" has stored etag of element "/"
     And user "Alice" has stored etag of element "/upload"
     When the public deletes file "file.txt" from the last public share using the new public WebDAV API
-    Then these etags should have changed:
+    Then the HTTP status code should be "204"
+    And these etags should have changed:
       | user  | path    |
       | Alice | /       |
       | Alice | /upload |
+    Examples:
+      | dav_version |
+      | old         |
+      | new         |
+
+  @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @skipOnOcis-OC-Storage @issue-product-280
-  Scenario: deleting a folder in a publicly shared folder changes its etag for the sharer
-    Given user "Alice" has created folder "/upload/sub"
+  Scenario Outline: deleting a folder in a publicly shared folder changes its etag for the sharer
+    Given using <dav_version> DAV path
+    And user "Alice" has created folder "/upload/sub"
     And user "Alice" has created a public link share with settings
       | path        | upload |
       | permissions | change |
     And user "Alice" has stored etag of element "/"
     And user "Alice" has stored etag of element "/upload"
     When the public deletes folder "sub" from the last public share using the new public WebDAV API
-    Then these etags should have changed:
+    Then the HTTP status code should be "204"
+    And these etags should have changed:
       | user  | path    |
       | Alice | /       |
       | Alice | /upload |
+    Examples:
+      | dav_version |
+      | old         |
+      | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |

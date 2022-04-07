@@ -21,13 +21,35 @@ class CutoverJob extends \Google\Model
 {
   protected $computeEngineTargetDetailsType = ComputeEngineTargetDetails::class;
   protected $computeEngineTargetDetailsDataType = '';
+  /**
+   * @var string
+   */
   public $createTime;
+  /**
+   * @var string
+   */
+  public $endTime;
   protected $errorType = Status::class;
   protected $errorDataType = '';
+  /**
+   * @var string
+   */
   public $name;
+  /**
+   * @var int
+   */
   public $progressPercent;
+  /**
+   * @var string
+   */
   public $state;
+  /**
+   * @var string
+   */
   public $stateMessage;
+  /**
+   * @var string
+   */
   public $stateTime;
 
   /**
@@ -44,13 +66,33 @@ class CutoverJob extends \Google\Model
   {
     return $this->computeEngineTargetDetails;
   }
+  /**
+   * @param string
+   */
   public function setCreateTime($createTime)
   {
     $this->createTime = $createTime;
   }
+  /**
+   * @return string
+   */
   public function getCreateTime()
   {
     return $this->createTime;
+  }
+  /**
+   * @param string
+   */
+  public function setEndTime($endTime)
+  {
+    $this->endTime = $endTime;
+  }
+  /**
+   * @return string
+   */
+  public function getEndTime()
+  {
+    return $this->endTime;
   }
   /**
    * @param Status
@@ -66,42 +108,72 @@ class CutoverJob extends \Google\Model
   {
     return $this->error;
   }
+  /**
+   * @param string
+   */
   public function setName($name)
   {
     $this->name = $name;
   }
+  /**
+   * @return string
+   */
   public function getName()
   {
     return $this->name;
   }
+  /**
+   * @param int
+   */
   public function setProgressPercent($progressPercent)
   {
     $this->progressPercent = $progressPercent;
   }
+  /**
+   * @return int
+   */
   public function getProgressPercent()
   {
     return $this->progressPercent;
   }
+  /**
+   * @param string
+   */
   public function setState($state)
   {
     $this->state = $state;
   }
+  /**
+   * @return string
+   */
   public function getState()
   {
     return $this->state;
   }
+  /**
+   * @param string
+   */
   public function setStateMessage($stateMessage)
   {
     $this->stateMessage = $stateMessage;
   }
+  /**
+   * @return string
+   */
   public function getStateMessage()
   {
     return $this->stateMessage;
   }
+  /**
+   * @param string
+   */
   public function setStateTime($stateTime)
   {
     $this->stateTime = $stateTime;
   }
+  /**
+   * @return string
+   */
   public function getStateTime()
   {
     return $this->stateTime;

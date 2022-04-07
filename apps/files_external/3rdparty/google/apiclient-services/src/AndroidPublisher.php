@@ -38,9 +38,11 @@ class AndroidPublisher extends \Google\Service
   const ANDROIDPUBLISHER =
       "https://www.googleapis.com/auth/androidpublisher";
 
+  public $applications_deviceTierConfigs;
   public $edits;
   public $edits_apks;
   public $edits_bundles;
+  public $edits_countryavailability;
   public $edits_deobfuscationfiles;
   public $edits_details;
   public $edits_expansionfiles;
@@ -48,6 +50,7 @@ class AndroidPublisher extends \Google\Service
   public $edits_listings;
   public $edits_testers;
   public $edits_tracks;
+  public $generatedapks;
   public $grants;
   public $inappproducts;
   public $internalappsharingartifacts;
@@ -76,6 +79,63 @@ class AndroidPublisher extends \Google\Service
     $this->version = 'v3';
     $this->serviceName = 'androidpublisher';
 
+    $this->applications_deviceTierConfigs = new AndroidPublisher\Resource\ApplicationsDeviceTierConfigs(
+        $this,
+        $this->serviceName,
+        'deviceTierConfigs',
+        [
+          'methods' => [
+            'create' => [
+              'path' => 'androidpublisher/v3/applications/{packageName}/deviceTierConfigs',
+              'httpMethod' => 'POST',
+              'parameters' => [
+                'packageName' => [
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ],
+                'allowUnknownDevices' => [
+                  'location' => 'query',
+                  'type' => 'boolean',
+                ],
+              ],
+            ],'get' => [
+              'path' => 'androidpublisher/v3/applications/{packageName}/deviceTierConfigs/{deviceTierConfigId}',
+              'httpMethod' => 'GET',
+              'parameters' => [
+                'packageName' => [
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ],
+                'deviceTierConfigId' => [
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ],
+              ],
+            ],'list' => [
+              'path' => 'androidpublisher/v3/applications/{packageName}/deviceTierConfigs',
+              'httpMethod' => 'GET',
+              'parameters' => [
+                'packageName' => [
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ],
+                'pageSize' => [
+                  'location' => 'query',
+                  'type' => 'integer',
+                ],
+                'pageToken' => [
+                  'location' => 'query',
+                  'type' => 'string',
+                ],
+              ],
+            ],
+          ]
+        ]
+    );
     $this->edits = new AndroidPublisher\Resource\Edits(
         $this,
         $this->serviceName,
@@ -253,6 +313,36 @@ class AndroidPublisher extends \Google\Service
                 'ackBundleInstallationWarning' => [
                   'location' => 'query',
                   'type' => 'boolean',
+                ],
+              ],
+            ],
+          ]
+        ]
+    );
+    $this->edits_countryavailability = new AndroidPublisher\Resource\EditsCountryavailability(
+        $this,
+        $this->serviceName,
+        'countryavailability',
+        [
+          'methods' => [
+            'get' => [
+              'path' => 'androidpublisher/v3/applications/{packageName}/edits/{editId}/countryAvailability/{track}',
+              'httpMethod' => 'GET',
+              'parameters' => [
+                'packageName' => [
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ],
+                'editId' => [
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ],
+                'track' => [
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
                 ],
               ],
             ],
@@ -842,6 +932,51 @@ class AndroidPublisher extends \Google\Service
                 'track' => [
                   'location' => 'path',
                   'type' => 'string',
+                  'required' => true,
+                ],
+              ],
+            ],
+          ]
+        ]
+    );
+    $this->generatedapks = new AndroidPublisher\Resource\Generatedapks(
+        $this,
+        $this->serviceName,
+        'generatedapks',
+        [
+          'methods' => [
+            'download' => [
+              'path' => 'androidpublisher/v3/applications/{packageName}/generatedApks/{versionCode}/downloads/{downloadId}:download',
+              'httpMethod' => 'GET',
+              'parameters' => [
+                'packageName' => [
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ],
+                'versionCode' => [
+                  'location' => 'path',
+                  'type' => 'integer',
+                  'required' => true,
+                ],
+                'downloadId' => [
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ],
+              ],
+            ],'list' => [
+              'path' => 'androidpublisher/v3/applications/{packageName}/generatedApks/{versionCode}',
+              'httpMethod' => 'GET',
+              'parameters' => [
+                'packageName' => [
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ],
+                'versionCode' => [
+                  'location' => 'path',
+                  'type' => 'integer',
                   'required' => true,
                 ],
               ],

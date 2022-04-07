@@ -1,4 +1,4 @@
-@api @issue-ocis-reva-14
+@api
 Feature: users cannot move (rename) a file to a blacklisted name
   As an administrator
   I want to be able to prevent users from moving (renaming) files to specified file names
@@ -19,16 +19,26 @@ Feature: users cannot move (rename) a file to a blacklisted name
       | old         |
       | new         |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
 
   Scenario Outline: rename a file to a banned filename
     Given using <dav_version> DAV path
-    When the administrator updates system config key "blacklisted_files" with value '["blacklisted-file.txt",".htaccess"]' and type "json" using the occ command
-    And user "Alice" moves file "/textfile0.txt" to "/blacklisted-file.txt" using the WebDAV API
+    And the administrator has updated system config key "blacklisted_files" with value '["blacklisted-file.txt",".htaccess"]' and type "json"
+    When user "Alice" moves file "/textfile0.txt" to "/blacklisted-file.txt" using the WebDAV API
     Then the HTTP status code should be "403"
     Examples:
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @skipOnOcV10.3
   Scenario Outline: rename a file to a filename that matches (or not) blacklisted_files_regex
@@ -63,3 +73,8 @@ Feature: users cannot move (rename) a file to a blacklisted name
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |

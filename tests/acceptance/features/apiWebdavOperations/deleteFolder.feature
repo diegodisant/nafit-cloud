@@ -19,6 +19,11 @@ Feature: delete folder
       | old         |
       | new         |
 
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
+
   @issue-ocis-reva-269
   Scenario Outline: delete a folder when 2 folder exist with different case
     Given using <dav_version> DAV path
@@ -31,6 +36,11 @@ Feature: delete folder
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @issue-ocis-reva-269
   Scenario Outline: delete a sub-folder
@@ -46,6 +56,11 @@ Feature: delete folder
       | dav_version |
       | old         |
       | new         |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version |
+      | spaces      |
 
   @files_sharing-app-required @notToImplementOnOCIS
   Scenario Outline: delete a folder when there is a default folder for received shares
@@ -64,10 +79,10 @@ Feature: delete folder
     And user "Brian" should be able to delete folder "/Top"
     Examples:
       | dav_version | share_folder    |
-      | old         | /ReceivedShares |
-      | new         | /ReceivedShares |
       | old         | ReceivedShares  |
+      | old         | /ReceivedShares |
       | new         | ReceivedShares  |
+      | new         | /ReceivedShares |
 
   @files_sharing-app-required @notToImplementOnOCIS
   Scenario Outline: delete a folder when there is a default folder for received shares that is a multi-level path
@@ -91,6 +106,7 @@ Feature: delete folder
       | old         |
       | new         |
 
+
   Scenario Outline: deleting folder with dot in the name
     Given using <dav_version> DAV path
     And user "Alice" has created folder "<folder_name>"
@@ -112,4 +128,15 @@ Feature: delete folder
       | new         | /...        |
       | new         | /..fo       |
       | new         | /fo.xyz     |
-      | old         | /fo.exe     |
+      | new         | /fo.exe     |
+
+    @skipOnOcV10 @personalSpace
+    Examples:
+      | dav_version | folder_name |
+      | spaces      | /fo.        |
+      | spaces      | /fo.1       |
+      | spaces      | /fo...1..   |
+      | spaces      | /...        |
+      | spaces      | /..fo       |
+      | spaces      | /fo.xyz     |
+      | spaces      | /fo.exe     |

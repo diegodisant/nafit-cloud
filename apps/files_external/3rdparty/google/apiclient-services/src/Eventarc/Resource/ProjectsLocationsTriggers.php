@@ -46,7 +46,7 @@ class ProjectsLocationsTriggers extends \Google\Service\Resource
    * @opt_param string triggerId Required. The user-provided ID to be assigned to
    * the trigger.
    * @opt_param bool validateOnly Required. If set, validate the request and
-   * preview the review, but do not actually post it.
+   * preview the review, but do not post it.
    * @return GoogleLongrunningOperation
    */
   public function create($parent, Trigger $postBody, $optParams = [])
@@ -66,7 +66,7 @@ class ProjectsLocationsTriggers extends \Google\Service\Resource
    * @opt_param string etag If provided, the trigger will only be deleted if the
    * etag matches the current etag on the resource.
    * @opt_param bool validateOnly Required. If set, validate the request and
-   * preview the review, but do not actually post it.
+   * preview the review, but do not post it.
    * @return GoogleLongrunningOperation
    */
   public function delete($name, $optParams = [])
@@ -97,12 +97,16 @@ class ProjectsLocationsTriggers extends \Google\Service\Resource
    * field.
    * @param array $optParams Optional parameters.
    *
-   * @opt_param int options.requestedPolicyVersion Optional. The policy format
-   * version to be returned. Valid values are 0, 1, and 3. Requests specifying an
-   * invalid value will be rejected. Requests for policies with any conditional
-   * bindings must specify version 3. Policies without any conditional bindings
-   * may specify any valid value or leave the field unset. To learn which
-   * resources support conditions in their IAM policies, see the [IAM
+   * @opt_param int options.requestedPolicyVersion Optional. The maximum policy
+   * version that will be used to format the policy. Valid values are 0, 1, and 3.
+   * Requests specifying an invalid value will be rejected. Requests for policies
+   * with any conditional role bindings must specify version 3. Policies with no
+   * conditional role bindings may specify any valid value or leave the field
+   * unset. The policy in the response might use the policy version that you
+   * specified, or it might use a lower policy version. For example, if you
+   * specify version 3, but the policy has no conditional role bindings, the
+   * response uses version 1. To learn which resources support conditions in their
+   * IAM policies, see the [IAM
    * documentation](https://cloud.google.com/iam/help/conditions/resource-
    * policies).
    * @return Policy
@@ -119,9 +123,13 @@ class ProjectsLocationsTriggers extends \Google\Service\Resource
    * @param string $parent Required. The parent collection to list triggers on.
    * @param array $optParams Optional parameters.
    *
+   * @opt_param string filter Filter field. Used to filter the Triggers to be
+   * listed. Possible filters are described in https://google.aip.dev/160. For
+   * example, using "?filter=destination:gke" would list only Triggers with a gke
+   * destination.
    * @opt_param string orderBy The sorting order of the resources returned. Value
-   * should be a comma separated list of fields. The default sorting oder is
-   * ascending. To specify descending order for a field, append a ` desc` suffix;
+   * should be a comma-separated list of fields. The default sorting order is
+   * ascending. To specify descending order for a field, append a `desc` suffix;
    * for example: `name desc, trigger_id`.
    * @opt_param int pageSize The maximum number of triggers to return on each
    * page. Note: The service may send fewer.
@@ -141,7 +149,7 @@ class ProjectsLocationsTriggers extends \Google\Service\Resource
    * Update a single trigger. (triggers.patch)
    *
    * @param string $name Required. The resource name of the trigger. Must be
-   * unique within the location on the project and must be in
+   * unique within the location of the project and must be in
    * `projects/{project}/locations/{location}/triggers/{trigger}` format.
    * @param Trigger $postBody
    * @param array $optParams Optional parameters.
@@ -149,11 +157,10 @@ class ProjectsLocationsTriggers extends \Google\Service\Resource
    * @opt_param bool allowMissing If set to true, and the trigger is not found, a
    * new trigger will be created. In this situation, `update_mask` is ignored.
    * @opt_param string updateMask The fields to be updated; only fields explicitly
-   * provided will be updated. If no field mask is provided, all provided fields
-   * in the request will be updated. To update all fields, provide a field mask of
-   * "*".
+   * provided are updated. If no field mask is provided, all provided fields in
+   * the request are updated. To update all fields, provide a field mask of "*".
    * @opt_param bool validateOnly Required. If set, validate the request and
-   * preview the review, but do not actually post it.
+   * preview the review, but do not post it.
    * @return GoogleLongrunningOperation
    */
   public function patch($name, Trigger $postBody, $optParams = [])
